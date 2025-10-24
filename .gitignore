@@ -1,0 +1,28 @@
+# Uploaded files (should not be in git)
+m_capacitaciones/formulario/
+m_capacitaciones/assets/docs/
+m_capacitaciones/uploads/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Logs
+*.log
+error_log
+
+# Environment files
+.env
+.env.local
