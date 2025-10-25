@@ -259,6 +259,7 @@ try {
                     f.fecha,
                     l.lugar,
                     CONCAT_WS(' ', NULLIF(u.nombre1, ''), NULLIF(u.nombre2, ''), NULLIF(u.apellido1, ''), NULLIF(u.apellido2, '')) AS responsable
+                    u.nombre1 || ' ' || COALESCE(u.apellido1, '') AS responsable
                 FROM cap_formulario_asistente fa
                 INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                 INNER JOIN cap_tema t ON f.id_tema = t.id
