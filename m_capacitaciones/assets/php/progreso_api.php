@@ -116,7 +116,7 @@ try {
                     t.nombre AS tema,
                     f.fecha AS fecha_realizada,
                     'completada' AS estado,
-                    u.nombre1 || ' ' || COALESCE(u.apellido1, '') AS responsable
+                    TRIM(COALESCE(u.nombre1, '') || ' ' || COALESCE(u.nombre2, '') || ' ' || COALESCE(u.apellido1, '') || ' ' || COALESCE(u.apellido2, '')) AS responsable
                 FROM cap_formulario_asistente fa
                 INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                 INNER JOIN cap_tema t ON f.id_tema = t.id
@@ -258,7 +258,7 @@ try {
                     pr.proceso,
                     f.fecha,
                     l.lugar,
-                    u.nombre1 || ' ' || COALESCE(u.apellido1, '') AS responsable
+                    TRIM(COALESCE(u.nombre1, '') || ' ' || COALESCE(u.nombre2, '') || ' ' || COALESCE(u.apellido1, '') || ' ' || COALESCE(u.apellido2, '')) AS responsable
                 FROM cap_formulario_asistente fa
                 INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                 INNER JOIN cap_tema t ON f.id_tema = t.id
@@ -289,7 +289,7 @@ try {
                 SELECT 
                     pr.proceso,
                     l.lugar,
-                    u.nombre1 || ' ' || COALESCE(u.apellido1, '') AS responsable_capacitacion,
+                    TRIM(COALESCE(u.nombre1, '') || ' ' || COALESCE(u.nombre2, '') || ' ' || COALESCE(u.apellido1, '') || ' ' || COALESCE(u.apellido2, '')) AS responsable_capacitacion,
                     t.nombre AS tema,
                     ta.tipo_actividad,
                     f.fecha,
