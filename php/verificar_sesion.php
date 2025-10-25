@@ -107,12 +107,16 @@ try {
         $stmtUser->execute([':id' => $id_usuario]);
         $userInfo = $stmtUser->fetch(PDO::FETCH_ASSOC);
 
+        // Concatenar nombres y apellidos
+        $nombreCompleto = trim(($userInfo['nombre1'] ?? '') . ' ' . ($userInfo['nombre2'] ?? ''));
+        $apellidoCompleto = trim(($userInfo['apellido1'] ?? '') . ' ' . ($userInfo['apellido2'] ?? ''));
+
         echo json_encode([
             'success' => true,
             'usuario' => $_SESSION['usuario'],
-            'nombre'  => $_SESSION['nombre'],
+            'nombre'  => $nombreCompleto,
             'cedula'  => $userInfo['cedula'] ?? '',
-            'apellido' => $userInfo['apellido1'] ?? '',
+            'apellido' => $apellidoCompleto,
             'usuario_id' => $userInfo['id'] ?? '',
             'roles'   => $roles,
             'rol'     => $rolPrincipal,
@@ -171,12 +175,16 @@ try {
         $stmtColab->execute([':cedula' => $cedula]);
         $colabInfo = $stmtColab->fetch(PDO::FETCH_ASSOC);
 
+        // Concatenar nombres y apellidos del colaborador
+        $nombreCompleto = trim(($colabInfo['ac_nombre1'] ?? '') . ' ' . ($colabInfo['ac_nombre2'] ?? ''));
+        $apellidoCompleto = trim(($colabInfo['ac_apellido1'] ?? '') . ' ' . ($colabInfo['ac_apellido2'] ?? ''));
+
         echo json_encode([
             'success' => true,
             'usuario' => $_SESSION['usuario'],
-            'nombre'  => $_SESSION['nombre'],
+            'nombre'  => $nombreCompleto,
             'cedula'  => $colabInfo['ac_cedula'] ?? $cedula,
-            'apellido' => $colabInfo['ac_apellido1'] ?? '',
+            'apellido' => $apellidoCompleto,
             'usuario_id' => $colabInfo['ac_id'] ?? '',
             'roles'   => $roles,
             'rol'     => $rolPrincipal,

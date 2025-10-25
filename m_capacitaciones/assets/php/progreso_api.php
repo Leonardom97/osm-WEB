@@ -116,7 +116,7 @@ try {
                     t.nombre AS tema,
                     f.fecha AS fecha_realizada,
                     'completada' AS estado,
-                    u.nombre1 || ' ' || COALESCE(u.apellido1, '') AS responsable
+                    CONCAT_WS(' ', NULLIF(u.nombre1, ''), NULLIF(u.nombre2, ''), NULLIF(u.apellido1, ''), NULLIF(u.apellido2, '')) AS responsable
                 FROM cap_formulario_asistente fa
                 INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                 INNER JOIN cap_tema t ON f.id_tema = t.id
@@ -257,12 +257,58 @@ try {
                     ta.tipo_actividad,
                     pr.proceso,
                     f.fecha,
+                    l.lugar,
+                    CONCAT_WS(' ', NULLIF(u.nombre1, ''), NULLIF(u.nombre2, ''), NULLIF(u.apellido1, ''), NULLIF(u.apellido2, '')) AS responsable
                     u.nombre1 || ' ' || COALESCE(u.apellido1, '') AS responsable
                 FROM cap_formulario_asistente fa
                 INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                 INNER JOIN cap_tema t ON f.id_tema = t.id
                 LEFT JOIN cap_tipo_actividad ta ON f.id_tipo_actividad = ta.id
                 LEFT JOIN cap_proceso pr ON f.id_proceso = pr.id
+                LEFT JOIN cap_lugar l ON f.id_lugar = l.id
+                LEFT JOIN adm_usuarios u ON f.id_usuario = u.id
+                WHERE fa.cedula = ?
+                AND fa.estado_aprovacion = 'aprobo'
+                ORDER BY f.fecha DESC
+            ");
+            $stmt->execute([$cedula]);
+            $trainings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            jsonResponse(['success' => true, 'data' => $trainings]);
+            break;
+
+        case 'get_full_training_history':
+            // Get complete training history for Excel export
+            // Includes all fields from cap_formulario and cap_formulario_asistente
+            $cedula = $_SESSION['cedula'] ?? $_SESSION['usuario'] ?? null;
+            
+            if (!$cedula) {
+                jsonResponse(['success' => false, 'error' => 'Cédula no encontrada']);
+            }
+
+            $stmt = $pg->prepare("
+                SELECT 
+                    pr.proceso,
+                    l.lugar,
+                    CONCAT_WS(' ', NULLIF(u.nombre1, ''), NULLIF(u.nombre2, ''), NULLIF(u.apellido1, ''), NULLIF(u.apellido2, '')) AS responsable_capacitacion,
+                    t.nombre AS tema,
+                    ta.tipo_actividad,
+                    f.fecha,
+                    f.hora_inicio,
+                    f.hora_final AS hora_fin,
+                    fa.estado_aprovacion,
+                    fa.empresa,
+                    fa.cargo,
+                    fa.área AS area,
+                    fa.sub_área AS sub_area,
+                    fa.rango,
+                    fa.situacion
+                FROM cap_formulario_asistente fa
+                INNER JOIN cap_formulario f ON fa.id_formulario = f.id
+                INNER JOIN cap_tema t ON f.id_tema = t.id
+                LEFT JOIN cap_tipo_actividad ta ON f.id_tipo_actividad = ta.id
+                LEFT JOIN cap_proceso pr ON f.id_proceso = pr.id
+                LEFT JOIN cap_lugar l ON f.id_lugar = l.id
                 LEFT JOIN adm_usuarios u ON f.id_usuario = u.id
                 WHERE fa.cedula = ?
                 AND fa.estado_aprovacion = 'aprobo'
