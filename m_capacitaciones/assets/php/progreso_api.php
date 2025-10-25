@@ -242,6 +242,38 @@ try {
             jsonResponse(['success' => true, 'data' => $scheduled]);
             break;
 
+        case 'get_completed_trainings_details':
+            // Get detailed list of completed trainings for current user
+            // Includes: tema, tipo de actividad, proceso, fecha, responsable
+            $cedula = $_SESSION['cedula'] ?? $_SESSION['usuario'] ?? null;
+            
+            if (!$cedula) {
+                jsonResponse(['success' => false, 'error' => 'Cédula no encontrada']);
+            }
+
+            $stmt = $pg->prepare("
+                SELECT 
+                    t.nombre AS tema,
+                    ta.tipo_actividad,
+                    pr.proceso,
+                    f.fecha,
+                    u.nombre1 || ' ' || COALESCE(u.apellido1, '') AS responsable
+                FROM cap_formulario_asistente fa
+                INNER JOIN cap_formulario f ON fa.id_formulario = f.id
+                INNER JOIN cap_tema t ON f.id_tema = t.id
+                LEFT JOIN cap_tipo_actividad ta ON f.id_tipo_actividad = ta.id
+                LEFT JOIN cap_proceso pr ON f.id_proceso = pr.id
+                LEFT JOIN adm_usuarios u ON f.id_usuario = u.id
+                WHERE fa.cedula = ?
+                AND fa.estado_aprovacion = 'aprobo'
+                ORDER BY f.fecha DESC
+            ");
+            $stmt->execute([$cedula]);
+            $trainings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            jsonResponse(['success' => true, 'data' => $trainings]);
+            break;
+
         case 'get_all_progress':
             // Get training progress for all collaborators (admin view)
             $stmt = $pg->query("

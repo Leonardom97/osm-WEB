@@ -25,7 +25,7 @@ $host_name = gethostbyaddr($ip_address);
 try {
     // Buscar el usuario por cédula
     $stmt = $pg->prepare("
-        SELECT u.id, u.id_usuario, u.contraseña, u.nombre1, u.apellido1, u.estado_us
+        SELECT u.id, u.id_usuario, u.cedula, u.contraseña, u.nombre1, u.apellido1, u.estado_us
         FROM adm_usuarios u
         WHERE u.id_usuario = :cedula
         LIMIT 1
@@ -146,6 +146,7 @@ try {
     // 🔐 Asignar variables de sesión
     $_SESSION['usuario_id'] = $usuario['id'];
     $_SESSION['usuario'] = $usuario['id_usuario'];
+    $_SESSION['cedula'] = $usuario['cedula'] ?? $usuario['id_usuario'];  // Store cedula explicitly
     $_SESSION['nombre'] = $usuario['nombre1'] . ' ' . $usuario['apellido1'];
     $_SESSION['roles'] = $roles;
     $_SESSION['rol'] = $rolPrincipal;

@@ -24,7 +24,7 @@
             const data = await res.json();
 
             if (data.success) {
-                // Populate user fields (existing functionality)
+                // Populate common user fields
                 if (document.getElementById('usuario_txt')) {
                     document.getElementById('usuario_txt').value = data.usuario || '';
                 }
@@ -42,6 +42,39 @@
                 }
                 if (document.getElementById('rol_txt')) {
                     document.getElementById('rol_txt').value = data.rol || '';
+                }
+
+                // Store cedula in session storage for later use
+                if (data.cedula) {
+                    sessionStorage.setItem('user_cedula', data.cedula);
+                }
+
+                // Show collaborator section if user is a collaborator
+                if (data.tipo_usuario === 'colaborador' && data.colaborador_info) {
+                    const colabSection = document.getElementById('colaborador-section');
+                    if (colabSection) {
+                        colabSection.style.display = 'block';
+                        
+                        // Populate collaborator-specific fields
+                        if (document.getElementById('empresa_txt')) {
+                            document.getElementById('empresa_txt').value = data.colaborador_info.empresa || '';
+                        }
+                        if (document.getElementById('cargo_txt')) {
+                            document.getElementById('cargo_txt').value = data.colaborador_info.cargo || '';
+                        }
+                        if (document.getElementById('rango_txt')) {
+                            document.getElementById('rango_txt').value = data.colaborador_info.rango_cargo || '';
+                        }
+                        if (document.getElementById('area_txt')) {
+                            document.getElementById('area_txt').value = data.colaborador_info.area || '';
+                        }
+                        if (document.getElementById('sub_area_txt')) {
+                            document.getElementById('sub_area_txt').value = data.colaborador_info.sub_area || '';
+                        }
+                        if (document.getElementById('situacion_txt')) {
+                            document.getElementById('situacion_txt').value = data.colaborador_info.situacion || '';
+                        }
+                    }
                 }
             }
         } catch (error) {
@@ -258,7 +291,7 @@
 
     async function loadCompletedTrainings() {
         try {
-            const res = await fetch('/m_capacitaciones/assets/php/progreso_api.php?action=get_my_trainings', {
+            const res = await fetch('/m_capacitaciones/assets/php/progreso_api.php?action=get_completed_trainings_details', {
                 cache: 'no-store'
             });
             const result = await res.json();
@@ -266,30 +299,34 @@
             const container = document.getElementById('completedTrainingsContainer');
             if (!container) return;
 
-            if (result.success && result.data && result.data.completadas && result.data.completadas.length > 0) {
-                const trainings = result.data.completadas;
+            if (result.success && result.data && result.data.length > 0) {
+                const trainings = result.data;
                 container.innerHTML = `
                     <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Tema</th>
+                                    <th>Tipo de Actividad</th>
+                                    <th>Proceso</th>
                                     <th>Fecha</th>
                                     <th>Responsable</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${trainings.slice(0, 10).map(training => `
+                                ${trainings.map(training => `
                                     <tr>
-                                        <td>${training.tema}</td>
-                                        <td>${formatDate(training.fecha_realizada)}</td>
+                                        <td><strong>${training.tema}</strong></td>
+                                        <td>${training.tipo_actividad || '-'}</td>
+                                        <td>${training.proceso || '-'}</td>
+                                        <td>${formatDate(training.fecha)}</td>
                                         <td><small>${training.responsable || '-'}</small></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
-                    ${trainings.length > 10 ? `<div class="text-center"><small class="text-muted">... y ${trainings.length - 10} más</small></div>` : ''}
+                    ${trainings.length > 0 ? `<div class="text-center mt-2"><small class="text-muted">Total: ${trainings.length} capacitaciones realizadas</small></div>` : ''}
                 `;
             } else {
                 container.innerHTML = `
