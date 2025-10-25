@@ -121,6 +121,57 @@
                           </div>
                         </div>
 
+                        <!-- Sección adicional para colaboradores -->
+                        <div id="colaborador-section" style="display: none;">
+                          <hr>
+                          <h6 class="text-primary mb-3"><strong>Información Laboral</strong></h6>
+                          
+                          <div class="row">
+                            <div class="col">
+                              <div class="mb-3">
+                                <label class="form-label" style="color: rgb(0,0,0);"><strong>Empresa</strong></label>
+                                <input class="form-control" type="text" id="empresa_txt" placeholder="Empresa" readonly="">
+                              </div>
+                            </div>
+                            <div class="col">
+                              <div class="mb-3">
+                                <label class="form-label" style="color: rgb(0,0,0);"><strong>Situación</strong></label>
+                                <input class="form-control" type="text" id="situacion_txt" placeholder="Situación" readonly="">
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="row">
+                            <div class="col">
+                              <div class="mb-3">
+                                <label class="form-label" style="color: rgb(0,0,0);"><strong>Cargo</strong></label>
+                                <input class="form-control" type="text" id="cargo_txt" placeholder="Cargo" readonly="">
+                              </div>
+                            </div>
+                            <div class="col">
+                              <div class="mb-3">
+                                <label class="form-label" style="color: rgb(0,0,0);"><strong>Rango</strong></label>
+                                <input class="form-control" type="text" id="rango_txt" placeholder="Rango" readonly="">
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="row">
+                            <div class="col">
+                              <div class="mb-3">
+                                <label class="form-label" style="color: rgb(0,0,0);"><strong>Área</strong></label>
+                                <input class="form-control" type="text" id="area_txt" placeholder="Área" readonly="">
+                              </div>
+                            </div>
+                            <div class="col">
+                              <div class="mb-3">
+                                <label class="form-label" style="color: rgb(0,0,0);"><strong>Sub-Área</strong></label>
+                                <input class="form-control" type="text" id="sub_area_txt" placeholder="Sub-Área" readonly="">
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
                         <div class="mb-3"></div>
                       </form>
                     </div>
@@ -129,12 +180,17 @@
                   <!-- Training Information Card -->
                   <div class="card shadow mb-3">
                     <div class="card-header py-3">
-                      <p class="text-primary m-0 fw-bold">Capacitaciones Asignadas</p>
+                      <p class="text-primary m-0 fw-bold">Capacitaciones</p>
                     </div>
                     <div class="card-body">
                       <ul class="nav nav-tabs" id="trainingTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                          <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+                          <button class="nav-link active" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
+                            Realizadas
+                          </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                          <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
                             Pendientes
                           </button>
                         </li>
@@ -143,14 +199,18 @@
                             Programadas
                           </button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                          <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
-                            Realizadas
-                          </button>
-                        </li>
                       </ul>
                       <div class="tab-content mt-3" id="trainingTabContent">
-                        <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                        <div class="tab-pane fade show active" id="completed" role="tabpanel">
+                          <div id="completedTrainingsContainer">
+                            <div class="text-center">
+                              <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane fade" id="pending" role="tabpanel">
                           <div id="pendingTrainingsContainer">
                             <div class="text-center">
                               <div class="spinner-border spinner-border-sm" role="status">
@@ -161,15 +221,6 @@
                         </div>
                         <div class="tab-pane fade" id="scheduled" role="tabpanel">
                           <div id="scheduledTrainingsContainer">
-                            <div class="text-center">
-                              <div class="spinner-border spinner-border-sm" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="tab-pane fade" id="completed" role="tabpanel">
-                          <div id="completedTrainingsContainer">
                             <div class="text-center">
                               <div class="spinner-border spinner-border-sm" role="status">
                                 <span class="visually-hidden">Cargando...</span>

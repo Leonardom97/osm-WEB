@@ -103,6 +103,7 @@ try {
     // Guardar sesión
     $_SESSION['usuario_id'] = $usuario['ac_id'];
     $_SESSION['usuario'] = $usuario['ac_cedula'];
+    $_SESSION['cedula'] = $usuario['ac_cedula'];  // Also store cedula explicitly
     $_SESSION['nombre'] = $usuario['ac_nombre1'] . ' ' . $usuario['ac_apellido1'];
     $_SESSION['rol'] = 'usuario';
     $_SESSION['rol_id'] = 2;
