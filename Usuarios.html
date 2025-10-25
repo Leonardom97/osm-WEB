@@ -21,76 +21,15 @@
 
       <div id="content">
         <div class="container-fluid">
-          <h3 class="text-dark mb-4">USUARIO</h3>
+          <h3 class="text-dark mb-4">PANEL DE USUARIO</h3>
           <div class="row mb-3">
             <div class="col-lg-4">
-              <div class="card mb-3">
-                <div class="card-body text-center shadow">
-                  <img class="rounded-circle mb-3 mt-4" id="imagenPerfil" src="assets/img/dogs/image2.jpeg" width="160" height="160" alt="perfil">
-                  <div class="mb-3">
-                    <button class="btn btn-primary btn-sm" id="bt_cambiar-imagen" type="button" onclick="document.getElementById('inputFotoPerfil').click();">Cambiar Foto</button>
-                    <input type="file" id="inputFotoPerfil" accept="image/*" style="display: none;" onchange="cambiarImagenPerfil(event)">
-                  </div>
-                </div>
-              </div>
-              <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <h6 class="text-primary fw-bold m-0">Progreso de Capacitaciones</h6>
-                </div>
-                <div class="card-body">
-                  <h4 class="small fw-bold">Completado<span class="float-end" id="progressPercentage">0%</span></h4>
-                  <div class="progress progress-sm mb-3">
-                    <div class="progress-bar bg-primary" id="progressBar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"><span class="visually-hidden">0%</span></div>
-                  </div>
-                  <div class="text-center mb-2">
-                    <small class="text-muted">
-                      <span id="completedCount">0</span> de <span id="totalCount">0</span> capacitaciones realizadas
-                    </small>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <h6 class="text-primary fw-bold m-0">Últimas Capacitaciones</h6>
-                </div>
-                <div class="card-body">
-                  <div id="lastTrainingsContainer">
-                    <div class="text-center">
-                      <div class="spinner-border spinner-border-sm" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-lg-8">
-              <div class="row">
-                <div class="col">
                   <div class="card shadow mb-3">
                     <div class="card-header py-3">
                       <p class="text-primary m-0 fw-bold">Usuario</p>
                     </div>
                     <div class="card-body">
                       <form>
-                        <div class="row">
-                          <div class="col">
-                            <div id="rol" class="mb-3">
-                              <label class="form-label" for="rol_txt" style="color: rgb(0,0,0);"><strong>Rol</strong></label>
-                              <input class="form-control" type="text" id="rol_txt" placeholder="Rol" required="" readonly="">
-                              <div class="invalid-feedback"><span>Seleccionar Rol</span></div>
-                            </div>
-                          </div>
-                          <div class="col">
-                            <div id="usuario" class="mb-3">
-                              <label class="form-label" for="usuario_txt" style="color: rgb(0,0,0);"><strong>Usuario</strong></label>
-                              <input class="form-control form-control-user" type="text" id="usuario_txt" placeholder="Usuario" required="" readonly="">
-                            </div>
-                          </div>
-                        </div>
-
                         <div class="row">
                           <div class="col">
                             <div id="nombres" class="mb-3">
@@ -120,12 +59,40 @@
                             </div>
                           </div>
                         </div>
+                        <div class="mb-3"></div>
+                      </form>
+                    </div>
+                  </div>
+
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="text-primary fw-bold m-0">Últimas Capacitaciones</h6>
+                </div>
+                <div class="card-body">
+                  <div id="lastTrainingsContainer">
+                    <div class="text-center">
+                      <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-8">
+              <div class="row">
+                <div class="col">
+                  <div class="card shadow mb-3">
+                    <div class="card-header py-3">
+                      <p class="text-primary m-0 fw-bold">Información Laboral</p>
+                    </div>
+                    <div class="card-body">
+                      <form>
 
                         <!-- Sección adicional para colaboradores -->
                         <div id="colaborador-section" style="display: none;">
-                          <hr>
-                          <h6 class="text-primary mb-3"><strong>Información Laboral</strong></h6>
-                          
+            
                           <div class="row">
                             <div class="col">
                               <div class="mb-3">
