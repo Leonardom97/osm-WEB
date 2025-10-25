@@ -4,6 +4,11 @@
 (function() {
     'use strict';
 
+    // Global variable to store all trainings data for filtering and sorting
+    let allTrainingsData = [];
+    let currentSortColumn = null;
+    let currentSortOrder = 'asc';
+
     document.addEventListener('DOMContentLoaded', async function() {
         try {
             await loadUserData();
@@ -13,10 +18,265 @@
             await loadScheduledTrainings();
             await loadCompletedTrainings();
             await loadSessionHistory();
+            
+            // Setup event listeners
+            setupModalEventListeners();
         } catch (error) {
             console.error('Error loading training data:', error);
         }
     });
+
+    function setupModalEventListeners() {
+        // Ver Más button
+        const btnVerMas = document.getElementById('btnVerMasCapacitaciones');
+        if (btnVerMas) {
+            btnVerMas.addEventListener('click', openAllTrainingsModal);
+        }
+
+        // Export to Excel button
+        const btnExport = document.getElementById('btnExportToExcel');
+        if (btnExport) {
+            btnExport.addEventListener('click', exportToExcel);
+        }
+
+        // Search functionality
+        const searchInput = document.getElementById('searchTrainingsInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', filterTrainingsTable);
+        }
+
+        // Sorting functionality
+        const sortableHeaders = document.querySelectorAll('.sortable');
+        sortableHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const column = this.getAttribute('data-column');
+                sortTrainingsTable(column);
+            });
+        });
+    }
+
+    async function openAllTrainingsModal() {
+        try {
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('modalAllTrainings'));
+            modal.show();
+
+            // Load all trainings data
+            await loadAllTrainings();
+        } catch (error) {
+            console.error('Error opening modal:', error);
+            alert('Error al cargar los datos de capacitaciones');
+        }
+    }
+
+    async function loadAllTrainings() {
+        try {
+            const res = await fetch('/m_capacitaciones/assets/php/progreso_api.php?action=get_full_training_history', {
+                cache: 'no-store'
+            });
+            const result = await res.json();
+
+            if (result.success && result.data) {
+                allTrainingsData = result.data;
+                renderTrainingsTable(allTrainingsData);
+            } else {
+                document.getElementById('allTrainingsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="15" class="text-center text-muted">
+                            No hay capacitaciones registradas
+                        </td>
+                    </tr>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading all trainings:', error);
+            document.getElementById('allTrainingsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="15" class="text-center">
+                        <div class="alert alert-danger mb-0">Error al cargar capacitaciones</div>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    function renderTrainingsTable(data) {
+        const tbody = document.getElementById('allTrainingsTableBody');
+        const countText = document.getElementById('trainingCountText');
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="15" class="text-center text-muted">
+                        No hay registros que mostrar
+                    </td>
+                </tr>
+            `;
+            countText.textContent = 'Total: 0 registros';
+            return;
+        }
+
+        tbody.innerHTML = data.map(training => `
+            <tr>
+                <td>${training.proceso || '-'}</td>
+                <td>${training.lugar || '-'}</td>
+                <td>${training.responsable_capacitacion || '-'}</td>
+                <td>${training.tema || '-'}</td>
+                <td>${training.tipo_actividad || '-'}</td>
+                <td>${formatDateForTable(training.fecha)}</td>
+                <td>${training.hora_inicio || '-'}</td>
+                <td>${training.hora_fin || '-'}</td>
+                <td>${formatEstadoAprobacion(training.estado_aprovacion)}</td>
+                <td>${training.empresa || '-'}</td>
+                <td>${training.cargo || '-'}</td>
+                <td>${training.area || '-'}</td>
+                <td>${training.sub_area || '-'}</td>
+                <td>${training.rango || '-'}</td>
+                <td>${training.situacion || '-'}</td>
+            </tr>
+        `).join('');
+
+        countText.textContent = `Total: ${data.length} registros`;
+    }
+
+    function formatDateForTable(dateString) {
+        if (!dateString) return '-';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-CO', { 
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        } catch (e) {
+            return dateString;
+        }
+    }
+
+    function formatEstadoAprobacion(estado) {
+        if (!estado) return '-';
+        const estadoMap = {
+            'aprobo': 'Aprobó',
+            'no_aprobo': 'No Aprobó',
+            'no_aplica': 'No Aplica'
+        };
+        return estadoMap[estado] || estado;
+    }
+
+    function filterTrainingsTable() {
+        const searchTerm = document.getElementById('searchTrainingsInput').value.toLowerCase();
+        
+        if (!searchTerm) {
+            renderTrainingsTable(allTrainingsData);
+            return;
+        }
+
+        const filtered = allTrainingsData.filter(training => {
+            return Object.values(training).some(value => {
+                if (value === null || value === undefined) return false;
+                return value.toString().toLowerCase().includes(searchTerm);
+            });
+        });
+
+        renderTrainingsTable(filtered);
+    }
+
+    function sortTrainingsTable(column) {
+        // Toggle sort order if clicking the same column
+        if (currentSortColumn === column) {
+            currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortColumn = column;
+            currentSortOrder = 'asc';
+        }
+
+        // Update sort icons
+        document.querySelectorAll('.sortable i').forEach(icon => {
+            icon.className = 'fas fa-sort';
+        });
+        
+        const activeHeader = document.querySelector(`.sortable[data-column="${column}"] i`);
+        if (activeHeader) {
+            activeHeader.className = currentSortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        }
+
+        // Sort the data
+        const sortedData = [...allTrainingsData].sort((a, b) => {
+            let aVal = a[column];
+            let bVal = b[column];
+
+            // Handle null/undefined values
+            if (aVal === null || aVal === undefined) aVal = '';
+            if (bVal === null || bVal === undefined) bVal = '';
+
+            // Convert to strings for comparison
+            aVal = aVal.toString().toLowerCase();
+            bVal = bVal.toString().toLowerCase();
+
+            if (currentSortOrder === 'asc') {
+                return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+            } else {
+                return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+            }
+        });
+
+        renderTrainingsTable(sortedData);
+    }
+
+    function exportToExcel() {
+        if (!allTrainingsData || allTrainingsData.length === 0) {
+            alert('No hay datos para exportar');
+            return;
+        }
+
+        try {
+            // Prepare data for Excel export
+            const excelData = allTrainingsData.map(training => ({
+                'Proceso': training.proceso || '',
+                'Lugar': training.lugar || '',
+                'Responsable Capacitación': training.responsable_capacitacion || '',
+                'Tema': training.tema || '',
+                'Tipo de Actividad': training.tipo_actividad || '',
+                'Fecha': formatDateForTable(training.fecha),
+                'Hora Inicio': training.hora_inicio || '',
+                'Hora Fin': training.hora_fin || '',
+                'Estado Aprobación': formatEstadoAprobacion(training.estado_aprovacion),
+                'Empresa': training.empresa || '',
+                'Cargo': training.cargo || '',
+                'Área': training.area || '',
+                'Sub-Área': training.sub_area || '',
+                'Rango': training.rango || '',
+                'Situación': training.situacion || ''
+            }));
+
+            // Create workbook and worksheet
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Capacitaciones');
+
+            // Auto-size columns
+            const maxWidth = 50;
+            const colWidths = Object.keys(excelData[0]).map(key => {
+                const maxLen = Math.max(
+                    key.length,
+                    ...excelData.map(row => (row[key] ? row[key].toString().length : 0))
+                );
+                return { wch: Math.min(maxLen + 2, maxWidth) };
+            });
+            ws['!cols'] = colWidths;
+
+            // Generate filename with current date
+            const cedula = sessionStorage.getItem('user_cedula') || 'usuario';
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `Capacitaciones_${cedula}_${date}.xlsx`;
+
+            // Download file
+            XLSX.writeFile(wb, filename);
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            alert('Error al exportar a Excel. Por favor, intente nuevamente.');
+        }
+    }
 
     async function loadUserData() {
         try {
