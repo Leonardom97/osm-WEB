@@ -310,6 +310,7 @@ try {
                 LEFT JOIN cap_lugar l ON f.id_lugar = l.id
                 LEFT JOIN adm_usuarios u ON f.id_usuario = u.id
                 WHERE fa.cedula = ?
+                AND fa.estado_aprovacion = 'aprobo'
                 ORDER BY f.fecha DESC
             ");
             $stmt->execute([$cedula]);
