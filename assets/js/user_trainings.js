@@ -302,18 +302,13 @@
             if (result.success && result.data && result.data.length > 0) {
                 const trainings = result.data;
                 container.innerHTML = `
-                    <div class="mb-3 d-flex justify-content-end">
-                        <button id="exportExcelBtn" class="btn btn-success btn-sm">
-                            <i class="fas fa-file-excel"></i> Exportar a Excel
-                        </button>
-                    </div>
                     <div class="table-responsive">
-                        <table class="table table-sm table-hover" id="completedTrainingsTable">
+                        <table class="table table-sm table-hover">
                             <thead class="table-light">
                                 <tr>
                                     <th>Tema</th>
                                     <th>Tipo de Actividad</th>
-                                    <th>Lugar</th>
+                                    <th>Proceso</th>
                                     <th>Fecha</th>
                                     <th>Responsable</th>
                                 </tr>
@@ -323,7 +318,7 @@
                                     <tr>
                                         <td><strong>${training.tema}</strong></td>
                                         <td>${training.tipo_actividad || '-'}</td>
-                                        <td>${training.lugar || '-'}</td>
+                                        <td>${training.proceso || '-'}</td>
                                         <td>${formatDate(training.fecha)}</td>
                                         <td><small>${training.responsable || '-'}</small></td>
                                     </tr>
@@ -333,12 +328,6 @@
                     </div>
                     ${trainings.length > 0 ? `<div class="text-center mt-2"><small class="text-muted">Total: ${trainings.length} capacitaciones realizadas</small></div>` : ''}
                 `;
-
-                // Add event listener for Excel export button
-                const exportBtn = document.getElementById('exportExcelBtn');
-                if (exportBtn) {
-                    exportBtn.addEventListener('click', exportToExcel);
-                }
             } else {
                 container.innerHTML = `
                     <div class="text-center text-muted py-3">
@@ -352,99 +341,6 @@
             const container = document.getElementById('completedTrainingsContainer');
             if (container) {
                 container.innerHTML = '<div class="alert alert-danger">Error al cargar capacitaciones realizadas</div>';
-            }
-        }
-    }
-
-    async function exportToExcel() {
-        try {
-            // Show loading state
-            const btn = document.getElementById('exportExcelBtn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Exportando...';
-            btn.disabled = true;
-
-            // Fetch full training history with all fields
-            const res = await fetch('/m_capacitaciones/assets/php/progreso_api.php?action=get_full_training_history', {
-                cache: 'no-store'
-            });
-            const result = await res.json();
-
-            if (!result.success || !result.data || result.data.length === 0) {
-                alert('No hay datos para exportar');
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-                return;
-            }
-
-            const trainings = result.data;
-
-            // Prepare data for Excel
-            const excelData = trainings.map(training => ({
-                'Proceso': training.proceso || '',
-                'Lugar': training.lugar || '',
-                'Responsable Capacitación': training.responsable_capacitacion || '',
-                'Tema': training.tema || '',
-                'Tipo de Actividad': training.tipo_actividad || '',
-                'Fecha': training.fecha || '',
-                'Hora Inicio': training.hora_inicio || '',
-                'Hora Fin': training.hora_fin || '',
-                'Estado Aprobación': training.estado_aprovacion || '',
-                'Empresa': training.empresa || '',
-                'Cargo': training.cargo || '',
-                'Área': training.area || '',
-                'Sub Área': training.sub_area || '',
-                'Rango': training.rango || '',
-                'Situación': training.situacion || ''
-            }));
-
-            // Create workbook and worksheet
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(excelData);
-
-            // Set column widths
-            const colWidths = [
-                { wch: 20 }, // Proceso
-                { wch: 20 }, // Lugar
-                { wch: 25 }, // Responsable Capacitación
-                { wch: 30 }, // Tema
-                { wch: 20 }, // Tipo de Actividad
-                { wch: 12 }, // Fecha
-                { wch: 10 }, // Hora Inicio
-                { wch: 10 }, // Hora Fin
-                { wch: 15 }, // Estado Aprobación
-                { wch: 25 }, // Empresa
-                { wch: 25 }, // Cargo
-                { wch: 20 }, // Área
-                { wch: 20 }, // Sub Área
-                { wch: 15 }, // Rango
-                { wch: 15 }  // Situación
-            ];
-            ws['!cols'] = colWidths;
-
-            // Add worksheet to workbook
-            XLSX.utils.book_append_sheet(wb, ws, 'Capacitaciones');
-
-            // Generate filename with current date and cedula
-            const cedula = sessionStorage.getItem('user_cedula') || 'usuario';
-            const today = new Date().toISOString().split('T')[0];
-            const filename = `Historial_Capacitaciones_${cedula}_${today}.xlsx`;
-
-            // Save file
-            XLSX.writeFile(wb, filename);
-
-            // Restore button state
-            btn.innerHTML = originalHTML;
-            btn.disabled = false;
-
-        } catch (error) {
-            console.error('Error exporting to Excel:', error);
-            alert('Error al exportar a Excel. Por favor intente nuevamente.');
-            
-            const btn = document.getElementById('exportExcelBtn');
-            if (btn) {
-                btn.innerHTML = '<i class="fas fa-file-excel"></i> Exportar a Excel';
-                btn.disabled = false;
             }
         }
     }
