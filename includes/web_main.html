@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>OSM - Configuración Web</title>
-    <link rel="icon" type="image/png" sizes="697x475" href="../assets/img/Sin%20título-2.png">
-    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../assets/fonts/fontawesome-all.min.css">
-    <link rel="stylesheet" href="../assets/css/bs-theme-overrides.css">
+    <link rel="icon" type="image/png" sizes="697x475" href="/assets/img/Sin%20título-2.png">
+    <link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/fonts/fontawesome-all.min.css">
+    <link rel="stylesheet" href="/assets/css/bs-theme-overrides.css">
     <style>
         body { visibility: hidden; }
         .color-preview {
@@ -36,8 +36,7 @@
         }
     </style>
 </head>
-<body id="page-top">
-    <script src="../assets/js/auth_guard.js"></script>
+<body id="page-top" data-role="administrador">
     <div id="wrapper">
         <div id="sidebar"></div>
         <div class="d-flex flex-column" id="content-wrapper">
@@ -164,11 +163,14 @@
         </div>
     </div>
     
-    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../assets/js/main.js"></script>
-    <script src="../assets/js/sidebar.js"></script>
-    <script src="../assets/js/navbar.js"></script>
-    <script src="../assets/js/web_config.js"></script>
-    <script src="../assets/js/web_main_manager.js"></script>
+    <script src="/assets/js/auth_guard.js"></script>
+    <script src="/assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/navbar.js"></script>
+    <script src="/assets/js/web_main_manager.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => { document.body.style.visibility = 'visible'; });
+    </script>
+    <script src="/assets/js/web_config.js"></script>
 </body>
 </html>

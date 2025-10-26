@@ -8,8 +8,25 @@
     
     let currentConfig = null;
     
+    // Load sidebar and navbar components
+    async function includeComponent(file, selector) {
+        try {
+            const res = await fetch(file);
+            const html = await res.text();
+            const el = document.querySelector(selector);
+            if (el) el.innerHTML = html;
+        } catch (err) {
+            console.error(`Error al cargar ${file}:`, err);
+        }
+    }
+    
     // Initialize when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Load navbar and sidebar first
+        await includeComponent("/includes/navbar.html", "#navbar");
+        await includeComponent("/includes/sidebar.html", "#sidebar");
+        
+        // Then initialize the rest
         initializeEventListeners();
         loadCurrentConfig();
         loadAllThemes();
