@@ -8,23 +8,29 @@
 session_start();
 header('Content-Type: application/json');
 
-// Check if user is logged in and has administrator role
-if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['rol_nombre'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
-
-// Only allow administrators to access this API
-if ($_SESSION['rol_nombre'] !== 'Administrador' && $_SESSION['rol_nombre'] !== 'administrador') {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Acceso denegado. Solo administradores pueden gestionar la configuración.']);
-    exit;
-}
-
 require_once __DIR__ . '/db_postgres.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+// Allow GET requests for reading configuration (public access)
+// Require authentication only for POST/PUT (write operations)
+$requiresAuth = ($method !== 'GET');
+
+if ($requiresAuth) {
+    // Check if user is logged in and has administrator role
+    if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['rol_nombre'])) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'No autorizado']);
+        exit;
+    }
+
+    // Only allow administrators to access write operations
+    if ($_SESSION['rol_nombre'] !== 'Administrador' && $_SESSION['rol_nombre'] !== 'administrador') {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Acceso denegado. Solo administradores pueden gestionar la configuración.']);
+        exit;
+    }
+}
 
 try {
     switch ($method) {

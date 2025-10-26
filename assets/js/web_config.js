@@ -100,15 +100,37 @@
      * Update footer text
      */
     function updateFooterText(text) {
-        // Find all footer copyright elements
-        const footers = document.querySelectorAll('.copyright span, .copyright');
-        footers.forEach(footer => {
-            if (footer.tagName === 'SPAN') {
-                footer.textContent = text;
-            } else if (footer.querySelector('span')) {
-                footer.querySelector('span').textContent = text;
-            }
+        // Find all footer copyright elements - check multiple selectors
+        const selectors = [
+            '.copyright span',
+            'footer .copyright span',
+            '.sticky-footer .copyright span',
+            '.copyright',
+            'footer .copyright',
+            '.sticky-footer .copyright'
+        ];
+        
+        let updated = false;
+        selectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                if (element.tagName === 'SPAN') {
+                    element.textContent = text;
+                    updated = true;
+                } else if (element.tagName === 'DIV' && element.querySelector('span')) {
+                    element.querySelector('span').textContent = text;
+                    updated = true;
+                } else if (element.tagName === 'DIV') {
+                    // If no span, update the div directly
+                    element.textContent = text;
+                    updated = true;
+                }
+            });
         });
+        
+        if (!updated) {
+            console.warn('No se encontraron elementos de footer para actualizar');
+        }
     }
     
     /**
