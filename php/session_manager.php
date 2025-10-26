@@ -53,19 +53,8 @@ class SessionManager {
             // Log login attempt
             $this->logLoginAttempt($cedula, $tipo_usuario, true, $ip_address, $user_agent, $host_name, null);
             
-            // Close any existing inactive sessions with the same session_id to prevent unique constraint violation
+            // Delete old inactive sessions with the same session_id to prevent unique constraint violation
             // This can happen when browser is closed and restored, reusing the same PHP session_id
-            $stmt = $this->pg->prepare("
-                UPDATE adm_sesiones 
-                SET activa = FALSE,
-                    razon_cierre = 'session_restored',
-                    fecha_cierre = NOW()
-                WHERE session_id = :session_id 
-                AND activa = FALSE
-            ");
-            $stmt->execute([':session_id' => $session_id]);
-            
-            // Delete old inactive sessions with the same session_id to free up the constraint
             $stmt = $this->pg->prepare("
                 DELETE FROM adm_sesiones 
                 WHERE session_id = :session_id 
