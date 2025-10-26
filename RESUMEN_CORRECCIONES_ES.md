@@ -20,7 +20,7 @@ Se realizó un análisis heurístico completo del sistema identificando los sigu
 - **Impacto**: Páginas podrían quedar ocultas si la configuración fallaba
 
 ### 3. Aplicación Incompleta de Variables CSS
-- **Problema**: La clase `.text-primary` no se aplicaba completamente a todos los elementos
+- **Problema**: La clase `.text-primary` no se aplicaba a todos los elementos correspondientes
 - **Impacto**: Algunos textos no cambiaban de color al modificar el tema
 
 ## Soluciones Implementadas
@@ -201,12 +201,14 @@ Estos archivos ya existían y funcionan correctamente:
 
 ### Instalación
 ```bash
-# Conectar a PostgreSQL
+# Conectar a PostgreSQL (reemplazar 'osm2' con el nombre de tu base de datos)
 psql -U postgres -d osm2
 
 # Ejecutar migración
 \i db/migration_adm_webmain.sql
 ```
+
+**Nota**: Asegúrate de reemplazar `osm2` con el nombre real de tu base de datos.
 
 ### Estructura de Tabla
 ```sql
@@ -247,9 +249,12 @@ El sistema incluye:
 3. El rol debe ser exactamente "Administrador"
 
 ### Las imágenes no suben
-1. Verificar permisos del directorio: `chmod 755 assets/img/uploads/`
-2. Verificar tamaño de archivo (máximo 5MB)
-3. Verificar tipo de archivo (JPG, PNG, GIF, WEBP)
+1. Verificar permisos del directorio: `chmod 750 assets/img/uploads/` (recomendado)
+2. Asegurar que el usuario del servidor web es dueño del directorio
+3. Verificar tamaño de archivo (máximo 5MB)
+4. Verificar tipo de archivo (JPG, PNG, GIF, WEBP)
+
+**Nota de Seguridad**: Usar permisos 750 en lugar de 755 proporciona mejor seguridad para el directorio de uploads.
 
 ### La página queda en blanco
 1. Revisar consola del navegador

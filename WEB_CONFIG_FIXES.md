@@ -258,10 +258,13 @@ All security measures are in place:
 - Check role name matches "Administrador" exactly (case-sensitive)
 
 ### Images Not Uploading
-- Check directory permissions: `chmod 755 assets/img/uploads/`
+- Check directory permissions: `chmod 750 assets/img/uploads/` (recommended)
+- Ensure web server user owns the directory
 - Verify file size under 5MB
 - Check allowed file types (JPG, PNG, GIF, WEBP)
 - Review browser console for error messages
+
+**Security Note**: Use 750 permissions instead of 755 for better security on uploads directory.
 
 ### Page Stays Hidden
 - Check browser console for JavaScript errors
