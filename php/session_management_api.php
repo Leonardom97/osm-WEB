@@ -37,7 +37,9 @@ try {
         case 'get_my_sessions':
             // Get current user's session history
             $tipo_usuario = $_SESSION['tipo_usuario'] ?? 'admin';
+            // Validate and constrain limit parameter (min: 1, max: 1000)
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
+            $limit = max(1, min($limit, 1000));
             $sessions = $sessionManager->getUserSessionHistory(
                 $_SESSION['usuario_id'],
                 $tipo_usuario,
