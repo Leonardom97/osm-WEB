@@ -139,7 +139,6 @@ try {
 
         case 'get_last_trainings':
             // Get last N completed trainings for current user
-            // Now includes all fields from both cap_formulario and cap_formulario_asistente
             $cedula = $_SESSION['cedula'] ?? $_GET['cedula'] ?? null;
             $limit = $_GET['limit'] ?? 5;
             
@@ -149,28 +148,15 @@ try {
 
             $stmt = $pg->prepare("
                 SELECT 
-                    pr.proceso,
-                    l.lugar,
-                    CONCAT_WS(' ', NULLIF(u.nombre1, ''), NULLIF(u.nombre2, ''), NULLIF(u.apellido1, ''), NULLIF(u.apellido2, '')) AS responsable_capacitacion,
                     t.nombre AS tema,
-                    ta.tipo_actividad,
                     f.fecha,
-                    f.hora_inicio,
-                    f.hora_final AS hora_fin,
-                    fa.estado_aprovacion,
-                    fa.empresa,
-                    fa.cargo,
-                    fa.área AS area,
-                    fa.sub_área AS sub_area,
-                    fa.rango,
-                    fa.situacion
+                    pr.proceso AS proceso,
+                    l.lugar
                 FROM cap_formulario_asistente fa
                 INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                 INNER JOIN cap_tema t ON f.id_tema = t.id
-                LEFT JOIN cap_tipo_actividad ta ON f.id_tipo_actividad = ta.id
                 LEFT JOIN cap_proceso pr ON f.id_proceso = pr.id
                 LEFT JOIN cap_lugar l ON f.id_lugar = l.id
-                LEFT JOIN adm_usuarios u ON f.id_usuario = u.id
                 WHERE fa.cedula = ?
                 AND fa.estado_aprovacion = 'aprobo'
                 ORDER BY f.fecha DESC
@@ -273,6 +259,7 @@ try {
                     f.fecha,
                     l.lugar,
                     CONCAT_WS(' ', NULLIF(u.nombre1, ''), NULLIF(u.nombre2, ''), NULLIF(u.apellido1, ''), NULLIF(u.apellido2, '')) AS responsable
+                    u.nombre1 || ' ' || COALESCE(u.apellido1, '') AS responsable
                 FROM cap_formulario_asistente fa
                 INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                 INNER JOIN cap_tema t ON f.id_tema = t.id
