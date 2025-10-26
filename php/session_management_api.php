@@ -37,10 +37,11 @@ try {
         case 'get_my_sessions':
             // Get current user's session history
             $tipo_usuario = $_SESSION['tipo_usuario'] ?? 'admin';
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
             $sessions = $sessionManager->getUserSessionHistory(
                 $_SESSION['usuario_id'],
                 $tipo_usuario,
-                20
+                $limit
             );
             echo json_encode(['success' => true, 'sessions' => $sessions]);
             break;
