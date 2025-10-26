@@ -43,17 +43,17 @@ This implementation adds the `id_colaborador` column to training tables while ma
 
 1. **Backup Database**
    ```bash
-   pg_dump -U postgres -d your_database > backup_$(date +%Y%m%d).sql
+   pg_dump -U your_db_user -d your_database > backup_$(date +%Y%m%d).sql
    ```
 
 2. **Run Migration (in STAGING first)**
    ```bash
-   psql -U postgres -d staging_db -f db/migration_cap_id_colaborador.sql
+   psql -U your_db_user -d staging_db -f db/migration_cap_id_colaborador.sql
    ```
 
 3. **Review Results**
    ```bash
-   psql -U postgres -d staging_db -f db/report_unmapped_cedulas.sql
+   psql -U your_db_user -d staging_db -f db/report_unmapped_cedulas.sql
    ```
 
 4. **Deploy PHP Changes**
@@ -113,11 +113,12 @@ db/
 m_capacitaciones/assets/php/
 └── formulario_api.php                  # Modified for id_colaborador mapping
 
-Documentation/
+Root Documentation Files:
 ├── IMPLEMENTATION_GUIDE.md             # Detailed implementation steps
 ├── TESTING_GUIDE_CAP.md               # Testing procedures
 ├── DEPLOYMENT_CHECKLIST.md            # Deployment verification
-└── IMPLEMENTATION_SUMMARY_CAP.md      # Technical summary
+├── IMPLEMENTATION_SUMMARY_CAP.md      # Technical summary
+└── CAP_IMPLEMENTATION_README.md       # This file (Quick Start)
 ```
 
 ## ✅ Acceptance Criteria
@@ -205,7 +206,10 @@ After deployment, monitor these logs:
 
 ```bash
 # PHP errors (unmapped cedulas)
-tail -f /var/log/php/error.log | grep "Cedula not found"
+# Location varies by system - check your PHP configuration:
+# - Common locations: /var/log/php-fpm/error.log, /var/log/php/error.log
+# - Check with: php -i | grep error_log
+tail -f /path/to/php/error.log | grep "Cedula not found"
 
 # Cron execution
 tail -f /var/log/cap_notif_recalc.log
@@ -213,8 +217,10 @@ tail -f /var/log/cap_notif_recalc.log
 # PostgreSQL
 tail -f /var/log/postgresql/postgresql-*.log
 
-# Web server
-tail -f /var/log/apache2/error.log  # or nginx/error.log
+# Web server (Apache or Nginx)
+tail -f /var/log/apache2/error.log  # Apache
+# or
+tail -f /var/log/nginx/error.log    # Nginx
 ```
 
 ## 🔄 Rollback
@@ -222,8 +228,9 @@ tail -f /var/log/apache2/error.log  # or nginx/error.log
 If issues occur, rollback using:
 
 ```bash
-# Restore database
-psql -U postgres -d your_database < backup_YYYYMMDD.sql
+# Restore database from backup
+# Replace your_db_user with your actual database username
+psql -U your_db_user -d your_database < backup_YYYYMMDD.sql
 
 # Or use rollback script (at end of migration_cap_id_colaborador.sql)
 ```
