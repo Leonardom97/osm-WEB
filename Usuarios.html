@@ -9,6 +9,8 @@
 	<link rel="stylesheet" href="assets/css/bs-theme-overrides.css">
 	<style>
 		body { visibility: hidden; }
+				
+		
 	</style>
 </head>
 <body id="page-top">
@@ -123,30 +125,32 @@
 								</div>
 							</div>
 							<!-- fin Sección adicional para colaboradores -->
+							<div class="card shadow mb-4">
+								<div class="card-header py-3">
+									<h6 class="text-primary fw-bold m-0">Registro de Inicio de Sesión</h6>
+								</div>
+								<div class="card-body">
+									<div id="lastSessionsContainer">
+										<div class="text-center">
+											<div class="spinner-border spinner-border-sm" role="status">
+												<span class="visually-hidden">Cargando...</span>
+											</div>
+										</div>
+									</div>
+									<div class="text-center mt-3">
+										<button type="button" class="btn btn-primary btn-sm" id="btnVerMasSesiones">
+                      <i class="fas fa-list"></i> Ver Más
+                    </button>
+									</div>
+								</div>
+							</div>
+							<!-- fin Sección adicional para registro inicio secion -->
 						</div>
 
 						<div class="col-lg-7">
 							<div class="row">
 								<div class="col">
-									<div class="card shadow mb-4">
-										<div class="card-header py-3">
-											<h6 class="text-primary fw-bold m-0">Registro de Inicio de Sesión</h6>
-										</div>
-										<div class="card-body">
-											<div id="lastSessionsContainer">
-												<div class="text-center">
-													<div class="spinner-border spinner-border-sm" role="status">
-														<span class="visually-hidden">Cargando...</span>
-													</div>
-												</div>
-											</div>
-											<div class="text-center mt-3">
-												<button type="button" class="btn btn-primary btn-sm" id="btnVerMasSesiones">
-                      <i class="fas fa-list"></i> Ver Más
-                    </button>
-											</div>
-										</div>
-									</div>
+
 									<div class="card shadow mb-4">
 										<div class="card-header py-3">
 											<h6 class="text-primary fw-bold m-0">Últimas Capacitaciones</h6>
@@ -400,6 +404,6 @@
 	<script src="assets/js/navbar.js"></script>
 	<script src="assets/js/user_trainings.js"></script>
 	<script src="assets/js/xlsx.full.min.js"></script>
-    <script src="assets/js/web_config.js"></script>
+	<script src="assets/js/web_config.js"></script>
 </body>
 </html>
