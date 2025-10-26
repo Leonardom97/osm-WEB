@@ -432,18 +432,15 @@
 
             // Filter only searchable fields for better performance
             const filtered = allSessionsData.filter(session => {
-                const searchableFields = [
-                    session.ip_address,
-                    session.host_name,
-                    session.fecha_inicio,
-                    session.fecha_cierre,
-                    session.activa ? 'activa' : 'cerrada'
-                ];
-                
-                return searchableFields.some(value => {
-                    if (value === null || value === undefined) return false;
-                    return value.toString().toLowerCase().includes(searchTerm);
-                });
+                // Check specific searchable fields
+                return (
+                    (session.ip_address && session.ip_address.toLowerCase().includes(searchTerm)) ||
+                    (session.host_name && session.host_name.toLowerCase().includes(searchTerm)) ||
+                    (session.fecha_inicio && session.fecha_inicio.toString().toLowerCase().includes(searchTerm)) ||
+                    (session.fecha_cierre && session.fecha_cierre.toString().toLowerCase().includes(searchTerm)) ||
+                    (session.activa && 'activa'.includes(searchTerm)) ||
+                    (!session.activa && 'cerrada'.includes(searchTerm))
+                );
             });
 
             renderSessionsTable(filtered);
@@ -469,6 +466,9 @@
             activeHeader.className = currentSessionSortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
         }
 
+        // Calculate current time once for efficiency when sorting active sessions
+        const now = new Date();
+
         // Sort the data
         const sortedData = [...allSessionsData].sort((a, b) => {
             let aVal = a[column];
@@ -485,9 +485,9 @@
             } else if (column === 'duracion') {
                 // Calculate duration for sorting - use current time for active sessions
                 const aStart = a.fecha_inicio ? new Date(a.fecha_inicio) : null;
-                const aEnd = a.fecha_cierre ? new Date(a.fecha_cierre) : (a.activa ? new Date() : null);
+                const aEnd = a.fecha_cierre ? new Date(a.fecha_cierre) : (a.activa ? now : null);
                 const bStart = b.fecha_inicio ? new Date(b.fecha_inicio) : null;
-                const bEnd = b.fecha_cierre ? new Date(b.fecha_cierre) : (b.activa ? new Date() : null);
+                const bEnd = b.fecha_cierre ? new Date(b.fecha_cierre) : (b.activa ? now : null);
                 
                 aVal = (aStart && aEnd) ? (aEnd - aStart) : 0;
                 bVal = (bStart && bEnd) ? (bEnd - bStart) : 0;
