@@ -150,6 +150,7 @@ try {
     $_SESSION['nombre'] = $usuario['nombre1'] . ' ' . $usuario['apellido1'];
     $_SESSION['roles'] = $roles;
     $_SESSION['rol'] = $rolPrincipal;
+    $_SESSION['rol_nombre'] = $rolPrincipal; // For web_main_api.php compatibility
     $_SESSION['tipo_usuario'] = 'admin'; // ✅ IMPORTANTE para verificar_sesion.php
 
     echo json_encode(['success' => true, 'redirect' => '../panel.html']);
