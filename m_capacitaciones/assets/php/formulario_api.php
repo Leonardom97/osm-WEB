@@ -120,17 +120,51 @@ if ($action == 'get_select') {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $id_formulario = $row['id'];
 
-    // Inserta asistentes
+    // Inserta asistentes with id_colaborador mapping
     $stmt_asistente = $pg->prepare("INSERT INTO cap_formulario_asistente (
-            id_formulario, cedula, estado_aprovacion, nombre, empresa, cargo, área, sub_área, rango, situacion
+            id_formulario, cedula, id_colaborador, estado_aprovacion, nombre, empresa, cargo, área, sub_área, rango, situacion
         ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )");
+    
+    // Prepare statement for looking up colaborador by cedula
+    $stmt_lookup = $pg->prepare("
+        SELECT ac_id 
+        FROM adm_colaboradores 
+        WHERE regexp_replace(ac_cedula, '\D', '', 'g') = ?
+        LIMIT 1
+    ");
+    
+    $mapped_colaboradores = [];
+    $unmapped_cedulas = [];
 
     foreach ($data['asistentes'] as $asistente) {
+        // Normalize cedula (remove non-digit characters)
+        $cedula_normalizada = preg_replace('/\D/', '', $asistente['cedula']);
+        
+        // Lookup id_colaborador by normalized cedula
+        $id_colaborador = null;
+        if (!empty($cedula_normalizada)) {
+            $stmt_lookup->execute([$cedula_normalizada]);
+            $colaborador = $stmt_lookup->fetch(PDO::FETCH_ASSOC);
+            if ($colaborador) {
+                $id_colaborador = $colaborador['ac_id'];
+                $mapped_colaboradores[] = $id_colaborador;
+            } else {
+                // Log unmapped cedula for review
+                $unmapped_cedulas[] = [
+                    'cedula' => $asistente['cedula'],
+                    'nombre' => $asistente['nombre'] ?? 'N/A'
+                ];
+                error_log("Warning: Cedula not found in adm_colaboradores: " . $asistente['cedula'] . " (" . ($asistente['nombre'] ?? 'N/A') . ")");
+            }
+        }
+        
+        // Insert attendee with id_colaborador (can be NULL)
         $stmt_asistente->execute([
             $id_formulario,
             $asistente['cedula'],
+            $id_colaborador,  // Can be NULL if not found
             $asistente['estado_aprovacion'],
             $asistente['nombre'] ?? '',
             $asistente['empresa'] ?? '',
@@ -142,16 +176,35 @@ if ($action == 'get_select') {
         ]);
     }
     
+    // Get unique mapped colaborador IDs
+    $mapped_colaboradores = array_unique($mapped_colaboradores);
+    
     // Update training notifications after saving the form
     // This will calculate next training dates for all affected collaborators
     try {
+        // Call the global recalculation function
+        // Note: In future, could optimize with a function that accepts colaborador IDs
         $pg->query("SELECT actualizar_notificaciones_capacitacion()");
     } catch (Exception $e) {
         // Log error but don't fail the form save
         error_log("Error updating training notifications: " . $e->getMessage());
     }
     
-    jsonResponse(['success' => true, 'id_formulario' => $id_formulario]);
+    // Prepare response with audit information
+    $response = [
+        'success' => true, 
+        'id_formulario' => $id_formulario,
+        'asistentes_mapeados' => count($mapped_colaboradores),
+        'asistentes_total' => count($data['asistentes'])
+    ];
+    
+    // Include unmapped cedulas in response for audit
+    if (!empty($unmapped_cedulas)) {
+        $response['asistentes_sin_mapear'] = $unmapped_cedulas;
+        $response['warning'] = 'Algunos asistentes no pudieron ser mapeados a colaboradores. Revisar el log.';
+    }
+    
+    jsonResponse($response);
 }
 
 jsonResponse(['success' => false, 'error' => 'Acción no reconocida']);
