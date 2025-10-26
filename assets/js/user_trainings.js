@@ -320,6 +320,9 @@
 
     // ===== SESSIONS FUNCTIONS =====
     
+    // Debounce timer for search
+    let searchSessionsTimer = null;
+    
     async function loadAllSessions() {
         try {
             const res = await fetch('/php/session_management_api.php?action=get_my_sessions&limit=100', {
@@ -413,21 +416,38 @@
     }
 
     function filterSessionsTable() {
-        const searchTerm = document.getElementById('searchSessionsInput').value.toLowerCase();
-        
-        if (!searchTerm) {
-            renderSessionsTable(allSessionsData);
-            return;
+        // Clear previous timer
+        if (searchSessionsTimer) {
+            clearTimeout(searchSessionsTimer);
         }
+        
+        // Debounce search to improve performance
+        searchSessionsTimer = setTimeout(() => {
+            const searchTerm = document.getElementById('searchSessionsInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                renderSessionsTable(allSessionsData);
+                return;
+            }
 
-        const filtered = allSessionsData.filter(session => {
-            return Object.values(session).some(value => {
-                if (value === null || value === undefined) return false;
-                return value.toString().toLowerCase().includes(searchTerm);
+            // Filter only searchable fields for better performance
+            const filtered = allSessionsData.filter(session => {
+                const searchableFields = [
+                    session.ip_address,
+                    session.host_name,
+                    session.fecha_inicio,
+                    session.fecha_cierre,
+                    session.activa ? 'activa' : 'cerrada'
+                ];
+                
+                return searchableFields.some(value => {
+                    if (value === null || value === undefined) return false;
+                    return value.toString().toLowerCase().includes(searchTerm);
+                });
             });
-        });
 
-        renderSessionsTable(filtered);
+            renderSessionsTable(filtered);
+        }, 300); // Wait 300ms after user stops typing
     }
 
     function sortSessionsTable(column) {
@@ -463,13 +483,14 @@
                 aVal = aVal ? 1 : 0;
                 bVal = bVal ? 1 : 0;
             } else if (column === 'duracion') {
-                // Calculate duration for sorting
-                const aDuration = a.fecha_inicio && a.fecha_cierre ? 
-                    new Date(a.fecha_cierre) - new Date(a.fecha_inicio) : 0;
-                const bDuration = b.fecha_inicio && b.fecha_cierre ? 
-                    new Date(b.fecha_cierre) - new Date(b.fecha_inicio) : 0;
-                aVal = aDuration;
-                bVal = bDuration;
+                // Calculate duration for sorting - use current time for active sessions
+                const aStart = a.fecha_inicio ? new Date(a.fecha_inicio) : null;
+                const aEnd = a.fecha_cierre ? new Date(a.fecha_cierre) : (a.activa ? new Date() : null);
+                const bStart = b.fecha_inicio ? new Date(b.fecha_inicio) : null;
+                const bEnd = b.fecha_cierre ? new Date(b.fecha_cierre) : (b.activa ? new Date() : null);
+                
+                aVal = (aStart && aEnd) ? (aEnd - aStart) : 0;
+                bVal = (bStart && bEnd) ? (bEnd - bStart) : 0;
             } else {
                 // Convert to strings for comparison
                 aVal = aVal.toString().toLowerCase();
