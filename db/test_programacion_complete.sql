@@ -224,7 +224,7 @@ SELECT
     CASE 
         WHEN estado = 'pendiente' AND AVG(dias_para_vencimiento) = 0 THEN '✅'
         WHEN estado = 'vencida' AND MAX(dias_para_vencimiento) < 0 THEN '✅'
-        WHEN estado = 'proximo_vencer' AND MAX(dias_para_vencimiento) <= 30 THEN '✅'
+        WHEN estado = 'proximo_vencer' AND MAX(dias_para_vencimiento) <= 30 AND MIN(dias_para_vencimiento) > 0 THEN '✅'
         WHEN estado = 'vigente' AND MIN(dias_para_vencimiento) > 30 THEN '✅'
         ELSE '❌'
     END as validacion
