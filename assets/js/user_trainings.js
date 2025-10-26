@@ -8,16 +8,21 @@
     let allTrainingsData = [];
     let currentSortColumn = null;
     let currentSortOrder = 'asc';
+    
+    // Global variable to store all sessions data for filtering and sorting
+    let allSessionsData = [];
+    let currentSessionSortColumn = null;
+    let currentSessionSortOrder = 'asc';
 
     document.addEventListener('DOMContentLoaded', async function() {
         try {
             await loadUserData();
             await loadTrainingProgress();
+            await loadLastSessions();
             await loadLastTrainings();
             await loadPendingTrainings();
             await loadScheduledTrainings();
             await loadCompletedTrainings();
-            await loadSessionHistory();
             
             // Setup event listeners
             setupModalEventListeners();
@@ -27,30 +32,51 @@
     });
 
     function setupModalEventListeners() {
-        // Ver Más button
+        // Ver Más Capacitaciones button
         const btnVerMas = document.getElementById('btnVerMasCapacitaciones');
         if (btnVerMas) {
             btnVerMas.addEventListener('click', openAllTrainingsModal);
         }
+        
+        // Ver Más Sesiones button
+        const btnVerMasSesiones = document.getElementById('btnVerMasSesiones');
+        if (btnVerMasSesiones) {
+            btnVerMasSesiones.addEventListener('click', openAllSessionsModal);
+        }
 
-        // Export to Excel button
+        // Export to Excel button (only for trainings)
         const btnExport = document.getElementById('btnExportToExcel');
         if (btnExport) {
             btnExport.addEventListener('click', exportToExcel);
         }
 
-        // Search functionality
+        // Search functionality for trainings
         const searchInput = document.getElementById('searchTrainingsInput');
         if (searchInput) {
             searchInput.addEventListener('input', filterTrainingsTable);
         }
+        
+        // Search functionality for sessions
+        const searchSessionsInput = document.getElementById('searchSessionsInput');
+        if (searchSessionsInput) {
+            searchSessionsInput.addEventListener('input', filterSessionsTable);
+        }
 
-        // Sorting functionality
+        // Sorting functionality for trainings
         const sortableHeaders = document.querySelectorAll('.sortable');
         sortableHeaders.forEach(header => {
             header.addEventListener('click', function() {
                 const column = this.getAttribute('data-column');
                 sortTrainingsTable(column);
+            });
+        });
+        
+        // Sorting functionality for sessions
+        const sortableSessionHeaders = document.querySelectorAll('.sortable-session');
+        sortableSessionHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const column = this.getAttribute('data-column');
+                sortSessionsTable(column);
             });
         });
     }
@@ -66,6 +92,20 @@
         } catch (error) {
             console.error('Error opening modal:', error);
             alert('Error al cargar los datos de capacitaciones');
+        }
+    }
+    
+    async function openAllSessionsModal() {
+        try {
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('modalAllSessions'));
+            modal.show();
+
+            // Load all sessions data
+            await loadAllSessions();
+        } catch (error) {
+            console.error('Error opening sessions modal:', error);
+            alert('Error al cargar los datos de sesiones');
         }
     }
 
@@ -275,6 +315,247 @@
         } catch (error) {
             console.error('Error exporting to Excel:', error);
             alert('Error al exportar a Excel. Por favor, intente nuevamente.');
+        }
+    }
+
+    // ===== SESSIONS FUNCTIONS =====
+    
+    // Debounce timer for search
+    let searchSessionsTimer = null;
+    
+    async function loadAllSessions() {
+        try {
+            const res = await fetch('/php/session_management_api.php?action=get_my_sessions&limit=100', {
+                cache: 'no-store'
+            });
+            const result = await res.json();
+
+            if (result.success && result.sessions) {
+                allSessionsData = result.sessions;
+                renderSessionsTable(allSessionsData);
+            } else {
+                document.getElementById('allSessionsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            No hay sesiones registradas
+                        </td>
+                    </tr>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading all sessions:', error);
+            document.getElementById('allSessionsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <div class="alert alert-danger mb-0">Error al cargar sesiones</div>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    function renderSessionsTable(data) {
+        const tbody = document.getElementById('allSessionsTableBody');
+        const countText = document.getElementById('sessionCountText');
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        No hay registros que mostrar
+                    </td>
+                </tr>
+            `;
+            countText.textContent = 'Total: 0 registros';
+            return;
+        }
+
+        tbody.innerHTML = data.map(session => {
+            const isActive = session.activa;
+            const statusBadge = isActive ? 
+                '<span class="badge bg-success">Activa</span>' : 
+                '<span class="badge bg-secondary">Cerrada</span>';
+            const duration = calculateDuration(session.fecha_inicio, session.fecha_cierre, isActive);
+            
+            return `
+                <tr>
+                    <td>${formatDateTime(session.fecha_inicio)}</td>
+                    <td>${session.fecha_cierre ? formatDateTime(session.fecha_cierre) : '-'}</td>
+                    <td><code class="small">${session.ip_address || '-'}</code></td>
+                    <td><small>${session.host_name || '-'}</small></td>
+                    <td>${statusBadge}</td>
+                    <td><small>${duration}</small></td>
+                </tr>
+            `;
+        }).join('');
+
+        countText.textContent = `Total: ${data.length} registros`;
+    }
+
+    function calculateDuration(startDate, endDate, isActive) {
+        if (!startDate) return '-';
+        
+        try {
+            const start = new Date(startDate);
+            const end = endDate ? new Date(endDate) : new Date();
+            const diffMs = end - start;
+            
+            if (diffMs < 0) return '-';
+            
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m${isActive ? ' (en curso)' : ''}`;
+            } else {
+                return `${minutes}m${isActive ? ' (en curso)' : ''}`;
+            }
+        } catch (e) {
+            return '-';
+        }
+    }
+
+    function filterSessionsTable() {
+        // Clear previous timer
+        if (searchSessionsTimer) {
+            clearTimeout(searchSessionsTimer);
+        }
+        
+        // Debounce search to improve performance
+        searchSessionsTimer = setTimeout(() => {
+            const searchTerm = document.getElementById('searchSessionsInput').value.toLowerCase();
+            
+            if (!searchTerm) {
+                renderSessionsTable(allSessionsData);
+                return;
+            }
+
+            // Filter only searchable fields for better performance
+            const filtered = allSessionsData.filter(session => {
+                // Check specific searchable fields
+                return (
+                    (session.ip_address && session.ip_address.toLowerCase().includes(searchTerm)) ||
+                    (session.host_name && session.host_name.toLowerCase().includes(searchTerm)) ||
+                    (session.fecha_inicio && session.fecha_inicio.toString().toLowerCase().includes(searchTerm)) ||
+                    (session.fecha_cierre && session.fecha_cierre.toString().toLowerCase().includes(searchTerm)) ||
+                    (session.activa && 'activa'.includes(searchTerm)) ||
+                    (!session.activa && 'cerrada'.includes(searchTerm))
+                );
+            });
+
+            renderSessionsTable(filtered);
+        }, 300); // Wait 300ms after user stops typing
+    }
+
+    function sortSessionsTable(column) {
+        // Toggle sort order if clicking the same column
+        if (currentSessionSortColumn === column) {
+            currentSessionSortOrder = currentSessionSortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSessionSortColumn = column;
+            currentSessionSortOrder = 'asc';
+        }
+
+        // Update sort icons
+        document.querySelectorAll('.sortable-session i').forEach(icon => {
+            icon.className = 'fas fa-sort';
+        });
+        
+        const activeHeader = document.querySelector(`.sortable-session[data-column="${column}"] i`);
+        if (activeHeader) {
+            activeHeader.className = currentSessionSortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        }
+
+        // Calculate current time once for efficiency when sorting active sessions
+        const now = new Date();
+
+        // Sort the data
+        const sortedData = [...allSessionsData].sort((a, b) => {
+            let aVal = a[column];
+            let bVal = b[column];
+
+            // Handle null/undefined values
+            if (aVal === null || aVal === undefined) aVal = '';
+            if (bVal === null || bVal === undefined) bVal = '';
+
+            // Special handling for boolean 'activa' field
+            if (column === 'activa') {
+                aVal = aVal ? 1 : 0;
+                bVal = bVal ? 1 : 0;
+            } else if (column === 'duracion') {
+                // Calculate duration for sorting - use current time for active sessions
+                const aStart = a.fecha_inicio ? new Date(a.fecha_inicio) : null;
+                const aEnd = a.fecha_cierre ? new Date(a.fecha_cierre) : (a.activa ? now : null);
+                const bStart = b.fecha_inicio ? new Date(b.fecha_inicio) : null;
+                const bEnd = b.fecha_cierre ? new Date(b.fecha_cierre) : (b.activa ? now : null);
+                
+                aVal = (aStart && aEnd) ? (aEnd - aStart) : 0;
+                bVal = (bStart && bEnd) ? (bEnd - bStart) : 0;
+            } else {
+                // Convert to strings for comparison
+                aVal = aVal.toString().toLowerCase();
+                bVal = bVal.toString().toLowerCase();
+            }
+
+            if (currentSessionSortOrder === 'asc') {
+                return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+            } else {
+                return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+            }
+        });
+
+        renderSessionsTable(sortedData);
+    }
+
+    async function loadLastSessions() {
+        try {
+            const res = await fetch('/php/session_management_api.php?action=get_my_sessions&limit=5', {
+                cache: 'no-store'
+            });
+            const result = await res.json();
+
+            const container = document.getElementById('lastSessionsContainer');
+            if (!container) return;
+
+            if (result.success && result.sessions && result.sessions.length > 0) {
+                container.innerHTML = result.sessions.map(session => {
+                    const isActive = session.activa;
+                    const statusBadge = isActive ? 
+                        '<span class="badge bg-success">Activa</span>' : 
+                        '<span class="badge bg-secondary">Cerrada</span>';
+                    
+                    return `
+                        <div class="mb-3 pb-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="fas fa-desktop text-muted"></i> 
+                                        ${session.host_name || 'Dispositivo desconocido'}
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> ${formatDateTime(session.fecha_inicio)}
+                                        ${session.ip_address ? `<br><i class="fas fa-network-wired"></i> ${session.ip_address}` : ''}
+                                    </small>
+                                </div>
+                                ${statusBadge}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        <p class="mb-0">No hay sesiones registradas</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading last sessions:', error);
+            const container = document.getElementById('lastSessionsContainer');
+            if (container) {
+                container.innerHTML = '<div class="alert alert-danger">Error al cargar sesiones</div>';
+            }
         }
     }
 
@@ -628,58 +909,6 @@
             });
         } catch (e) {
             return dateString;
-        }
-    }
-
-    async function loadSessionHistory() {
-        try {
-            const res = await fetch('/php/session_management_api.php?action=get_my_sessions&limit=20', {
-                cache: 'no-store'
-            });
-            const result = await res.json();
-
-            const table = document.getElementById('sessionHistoryTable');
-            if (!table) return;
-
-            if (result.success && result.sessions && result.sessions.length > 0) {
-                table.innerHTML = result.sessions.map(session => {
-                    const isActive = session.activa;
-                    const statusBadge = isActive ? 
-                        '<span class="badge bg-success">Activa</span>' : 
-                        '<span class="badge bg-secondary">Cerrada</span>';
-                    
-                    return `
-                        <tr>
-                            <td>${formatDateTime(session.fecha_inicio)}</td>
-                            <td>${session.fecha_cierre ? formatDateTime(session.fecha_cierre) : '-'}</td>
-                            <td><small>${session.ip_address || '-'}</small></td>
-                            <td><small>${session.host_name || '-'}</small></td>
-                            <td>${statusBadge}</td>
-                        </tr>
-                    `;
-                }).join('');
-            } else {
-                table.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-3">
-                            <i class="fas fa-info-circle"></i>
-                            No hay historial de sesiones
-                        </td>
-                    </tr>
-                `;
-            }
-        } catch (error) {
-            console.error('Error loading session history:', error);
-            const table = document.getElementById('sessionHistoryTable');
-            if (table) {
-                table.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center">
-                            <div class="alert alert-danger mb-0">Error al cargar historial de sesiones</div>
-                        </td>
-                    </tr>
-                `;
-            }
         }
     }
 })();
