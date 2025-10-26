@@ -59,6 +59,9 @@
         if (config.primary_color) {
             updatePrimaryColor(config.primary_color);
         }
+        
+        // Make body visible after applying configuration
+        document.body.style.visibility = 'visible';
     }
     
     /**
@@ -73,6 +76,8 @@
             primary_color: '#772e22'
         };
         applyWebConfig(defaultConfig);
+        // Ensure body is visible even with defaults
+        document.body.style.visibility = 'visible';
     }
     
     /**
@@ -224,6 +229,14 @@
             
             .bg-gradient-primary {
                 background: ${color} !important;
+            }
+            
+            .text-primary {
+                color: ${color} !important;
+            }
+            
+            h1.text-primary, h2.text-primary, h3.text-primary, h4.text-primary, h5.text-primary, h6.text-primary {
+                color: ${color} !important;
             }
         `;
     }
