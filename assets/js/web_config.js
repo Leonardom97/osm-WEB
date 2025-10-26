@@ -260,6 +260,59 @@
             h1.text-primary, h2.text-primary, h3.text-primary, h4.text-primary, h5.text-primary, h6.text-primary {
                 color: ${color} !important;
             }
+            
+            /* Consulta-cap module dynamic colors */
+            .consulta-cap-toolbar {
+                background: ${color} !important;
+            }
+            
+            .consulta-cap-btn {
+                color: ${color} !important;
+            }
+            
+            .consulta-cap-btn.accent {
+                background: ${color} !important;
+            }
+            
+            .consulta-cap-select {
+                border-color: ${color} !important;
+            }
+            
+            .consulta-cap-table thead th {
+                color: ${color} !important;
+            }
+            
+            .consulta-cap-input:focus {
+                border-color: ${color} !important;
+            }
+            
+            .icon-sort:hover {
+                color: ${color} !important;
+            }
+            
+            #selectAll {
+                accent-color: ${color} !important;
+            }
+            
+            .consulta-cap-pagination .page-item .page-link {
+                color: ${color} !important;
+            }
+            
+            .consulta-cap-pagination .page-item .page-link:hover {
+                background: ${color} !important;
+            }
+            
+            .consulta-cap-pagination .active .page-link {
+                background: ${adjustBrightness(color, -30)} !important;
+            }
+            
+            .consulta-cap-footer {
+                color: ${color} !important;
+            }
+            
+            .consulta-cap-download-item {
+                color: ${color} !important;
+            }
         `;
     }
     
