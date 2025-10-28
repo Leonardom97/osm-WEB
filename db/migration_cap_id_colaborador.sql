@@ -2,7 +2,9 @@
 -- Migration: Add id_colaborador to capacitation tables
 -- Description: Partial migration to add id_colaborador columns while keeping
 --              cedula for audit purposes. Implements final training module.
--- Date: 2025-10-26
+-- Date: 2025-10-28 (Updated for PostgreSQL 9+ compatibility)
+-- Compatible with: Navicat, pgAdmin, psql
+-- Target: PostgreSQL 9.x and higher
 -- ============================================================================
 
 -- IMPORTANT: Execute this in STAGING first, then in PRODUCTION after testing
@@ -13,11 +15,22 @@ BEGIN;
 -- PHASE B.1: Add id_colaborador to cap_formulario_asistente
 -- ============================================================================
 
--- Add column if it doesn't exist
-ALTER TABLE cap_formulario_asistente 
-ADD COLUMN IF NOT EXISTS id_colaborador INTEGER;
+-- Add column if it doesn't exist (PostgreSQL 9.6+ supports IF NOT EXISTS)
+-- For PostgreSQL 9.5 and earlier, this will be handled with DO block
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+    AND table_name = 'cap_formulario_asistente' 
+    AND column_name = 'id_colaborador'
+  ) THEN
+    ALTER TABLE public.cap_formulario_asistente 
+    ADD COLUMN id_colaborador INTEGER;
+  END IF;
+END $$;
 
-COMMENT ON COLUMN cap_formulario_asistente.id_colaborador 
+COMMENT ON COLUMN public.cap_formulario_asistente.id_colaborador 
 IS 'Reference to adm_colaboradores.ac_id - populated from cedula match';
 
 -- ============================================================================
@@ -25,9 +38,9 @@ IS 'Reference to adm_colaboradores.ac_id - populated from cedula match';
 -- ============================================================================
 
 -- Update id_colaborador by matching cedula (normalized - removing non-digit chars)
-UPDATE cap_formulario_asistente a
+UPDATE public.cap_formulario_asistente a
 SET id_colaborador = c.ac_id
-FROM adm_colaboradores c
+FROM public.adm_colaboradores c
 WHERE regexp_replace(a.cedula, '\D', '', 'g') = regexp_replace(c.ac_cedula, '\D', '', 'g')
   AND a.id_colaborador IS NULL;
 
@@ -38,11 +51,11 @@ DECLARE
     unmapped_count INTEGER;
 BEGIN
     SELECT COUNT(*) INTO mapped_count 
-    FROM cap_formulario_asistente 
+    FROM public.cap_formulario_asistente 
     WHERE id_colaborador IS NOT NULL;
     
     SELECT COUNT(*) INTO unmapped_count 
-    FROM cap_formulario_asistente 
+    FROM public.cap_formulario_asistente 
     WHERE id_colaborador IS NULL;
     
     RAISE NOTICE '=============================================================';
@@ -63,7 +76,7 @@ SELECT
     a.cedula,
     COUNT(*) AS ocurrencias,
     STRING_AGG(DISTINCT a.nombre, ', ') AS nombres_registrados
-FROM cap_formulario_asistente a
+FROM public.cap_formulario_asistente a
 WHERE a.id_colaborador IS NULL
 GROUP BY a.cedula
 ORDER BY ocurrencias DESC;
@@ -95,20 +108,30 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- PHASE B.4: Add id_colaborador to cap_notificaciones (if not exists)
+-- PHASE B.4: Add cedula to cap_notificaciones (if not exists)
 -- ============================================================================
 
 -- Add cedula column to cap_notificaciones for audit purposes
-ALTER TABLE cap_notificaciones 
-ADD COLUMN IF NOT EXISTS cedula VARCHAR(255);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+    AND table_name = 'cap_notificaciones' 
+    AND column_name = 'cedula'
+  ) THEN
+    ALTER TABLE public.cap_notificaciones 
+    ADD COLUMN cedula character varying(255);
+  END IF;
+END $$;
 
-COMMENT ON COLUMN cap_notificaciones.cedula 
+COMMENT ON COLUMN public.cap_notificaciones.cedula 
 IS 'Cedula for audit purposes - never deleted';
 
 -- Populate cedula from adm_colaboradores if empty
-UPDATE cap_notificaciones n
+UPDATE public.cap_notificaciones n
 SET cedula = c.ac_cedula
-FROM adm_colaboradores c
+FROM public.adm_colaboradores c
 WHERE n.id_colaborador = c.ac_id
   AND (n.cedula IS NULL OR n.cedula = '');
 
@@ -117,24 +140,24 @@ WHERE n.id_colaborador = c.ac_id
 -- ============================================================================
 
 -- Index on id_colaborador in cap_formulario_asistente
-CREATE INDEX IF NOT EXISTS idx_cfa_id_colaborador 
-ON cap_formulario_asistente(id_colaborador);
+CREATE INDEX idx_cfa_id_colaborador 
+ON public.cap_formulario_asistente USING btree (id_colaborador);
 
 -- Index on id_colaborador in cap_notificaciones (should already exist, but ensure)
-CREATE INDEX IF NOT EXISTS idx_notif_id_colaborador 
-ON cap_notificaciones(id_colaborador);
+CREATE INDEX idx_notif_id_colaborador 
+ON public.cap_notificaciones USING btree (id_colaborador);
 
 -- Index on fecha_proxima in cap_notificaciones for efficient date queries
-CREATE INDEX IF NOT EXISTS idx_notif_fecha_proxima 
-ON cap_notificaciones(fecha_proxima);
+CREATE INDEX idx_notif_fecha_proxima 
+ON public.cap_notificaciones USING btree (fecha_proxima);
 
 -- Index on estado in cap_notificaciones for filtering
-CREATE INDEX IF NOT EXISTS idx_notif_estado 
-ON cap_notificaciones(estado);
+CREATE INDEX idx_notif_estado 
+ON public.cap_notificaciones USING btree (estado);
 
 -- Index on cedula in cap_formulario_asistente for lookups
-CREATE INDEX IF NOT EXISTS idx_cfa_cedula 
-ON cap_formulario_asistente(cedula);
+CREATE INDEX idx_cfa_cedula 
+ON public.cap_formulario_asistente USING btree (cedula);
 
 COMMENT ON INDEX idx_cfa_id_colaborador IS 'Fast lookup by collaborator ID';
 COMMENT ON INDEX idx_notif_id_colaborador IS 'Fast lookup by collaborator ID';
