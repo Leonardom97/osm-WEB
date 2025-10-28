@@ -3,7 +3,7 @@
 ## 📋 Archivos Creados
 
 ### 1. nginx.conf
-**Ubicación**: `/nginx.conf`  
+**Ubicación**: `/nginx.conf` (raíz del proyecto)  
 **Propósito**: Configuración completa de Nginx para la aplicación OSM
 
 **Características**:
