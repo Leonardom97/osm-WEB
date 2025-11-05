@@ -21,7 +21,7 @@ function respond($d){ echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }
 function api_log($m){ @file_put_contents(__DIR__.'/php_error_api.log', "[".date('Y-m-d H:i:s')."] ".$m."\n", FILE_APPEND|LOCK_EX); }
 
 /* Intento de localizar db_postgres.php en varias rutas relativas */
-$paths = [ __DIR__.'/../db_postgres.php', __DIR__.'/db_postgres.php', __DIR__.'/../../db_postgres.php' ];
+$paths = [ __DIR__.'/../../../php/db_postgres.php', __DIR__.'/../../db_postgres.php', __DIR__.'/../db_postgres.php' ];
 $ok = false;
 foreach ($paths as $p) { if (file_exists($p)) { require_once $p; $ok = true; break; } }
 if (!$ok || !isset($pg) || !($pg instanceof PDO)) { api_log("items_formulario: DB no disponible"); respond(['success'=>false,'error'=>'DB no disponible']); }
