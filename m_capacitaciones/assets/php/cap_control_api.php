@@ -13,9 +13,9 @@ function respond($data) {
     exit;
 }
 
-// Función para log de errores
+// Función para log de errores - usa error_log estándar de PHP
 function api_log($msg) {
-    @file_put_contents(__DIR__.'/php_error_api.log', "[".date('Y-m-d H:i:s')."] ".$msg."\n", FILE_APPEND|LOCK_EX);
+    error_log("[cap_control_api] " . $msg);
 }
 
 // Intentar conectar a la base de datos
@@ -43,6 +43,12 @@ if (!$connected || !isset($pg) || !($pg instanceof PDO)) {
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 $action = strtolower(trim($action));
 
+// Whitelist de acciones permitidas
+$allowed_actions = ['list_temas', 'list_procesos', 'list_lugares', 'list_tactividad'];
+if (!in_array($action, $allowed_actions)) {
+    respond(['success' => false, 'error' => 'Acción no válida']);
+}
+
 try {
     // Listar temas
     if ($action === 'list_temas') {
@@ -63,7 +69,7 @@ try {
     }
     
     // Listar procesos
-    elseif ($action === 'list_procesos') {
+    if ($action === 'list_procesos') {
         $stmt = $pg->prepare("SELECT id, proceso, estado FROM cap_proceso ORDER BY id ASC");
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -81,7 +87,7 @@ try {
     }
     
     // Listar lugares
-    elseif ($action === 'list_lugares') {
+    if ($action === 'list_lugares') {
         $stmt = $pg->prepare("SELECT id, lugar, estado FROM cap_lugar ORDER BY id ASC");
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -99,7 +105,7 @@ try {
     }
     
     // Listar tipos de actividad
-    elseif ($action === 'list_tactividad') {
+    if ($action === 'list_tactividad') {
         $stmt = $pg->prepare("SELECT id, nombre, estado FROM cap_tipo_actividad ORDER BY id ASC");
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -114,11 +120,6 @@ try {
         }, $rows);
         
         respond(['success' => true, 'tactividad' => $tactividad]);
-    }
-    
-    // Acción no reconocida
-    else {
-        respond(['success' => false, 'error' => 'Acción no válida']);
     }
     
 } catch (PDOException $e) {

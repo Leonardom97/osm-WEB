@@ -1,13 +1,13 @@
 /* items_formularios.css - Estilos para la página de edición de items de formularios */
 
 /* Estilo para filas inactivas */
-.row-inactive {
+tr.row-inactive {
     opacity: 0.5;
-    background-color: #f8f9fa !important;
+    background-color: #f8f9fa;
 }
 
-.row-inactive td {
-    color: #6c757d !important;
+tr.row-inactive td {
+    color: #6c757d;
 }
 
 /* Estilos para botones de iconos pequeños */
