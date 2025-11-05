@@ -1,6 +1,12 @@
 # Testing Guide for EMPLE_COD Sync Changes
 
-## Pre-requisites
+## ⚠️ Important Limitation
+
+**Existing Data**: Records already in PostgreSQL with `ac_id` values that don't match their corresponding `EMPLE_COD` will NOT be automatically migrated. The sync will only update records where `ac_id` matches the `EMPLE_COD` from SQL Server. New employees will be inserted correctly with `ac_id = EMPLE_COD`.
+
+If you need to migrate existing data, plan for manual data cleanup or a separate migration script.
+
+## Prerequisites
 
 Before testing the sync changes, ensure:
 

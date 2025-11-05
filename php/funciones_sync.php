@@ -1,4 +1,7 @@
 <?php
+// Rol por defecto para colaboradores sincronizados desde SQL Server
+define('ROL_COLABORADOR', 2);
+
 function getColaboradoresSQLServer(PDO $conn_sqlsrv) {
     $query = "
         SELECT 
@@ -80,6 +83,7 @@ function syncAllColaboradores(PDO $conn_sqlsrv, PDO $conn_pgsql) {
             ];
         } else {
             // El registro no existe, insertar nuevo con ac_id = EMPLE_COD
+            // Se asigna contraseña generada automáticamente y rol 2 (colaborador)
             $sql = "
                 INSERT INTO adm_colaboradores (
                     ac_id, ac_cedula, ac_nombre1, ac_nombre2, ac_apellido1, ac_apellido2,
@@ -88,7 +92,7 @@ function syncAllColaboradores(PDO $conn_sqlsrv, PDO $conn_pgsql) {
                 ) VALUES (
                     :emple_cod, :cedula, :nombre1, :nombre2, :apellido1, :apellido2,
                     :empresa, :cargo, :area, :situacion, :password,
-                    :subarea, :rango, 2
+                    :subarea, :rango, " . ROL_COLABORADOR . "
                 )
             ";
             
