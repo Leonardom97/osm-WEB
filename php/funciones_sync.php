@@ -92,7 +92,7 @@ function syncAllColaboradores(PDO $conn_sqlsrv, PDO $conn_pgsql) {
                 ) VALUES (
                     :emple_cod, :cedula, :nombre1, :nombre2, :apellido1, :apellido2,
                     :empresa, :cargo, :area, :situacion, :password,
-                    :subarea, :rango, " . ROL_COLABORADOR . "
+                    :subarea, :rango, :rol
                 )
             ";
             
@@ -109,7 +109,8 @@ function syncAllColaboradores(PDO $conn_sqlsrv, PDO $conn_pgsql) {
                 ':situacion' => $situacion_id,
                 ':password' => $password_default,
                 ':subarea' => $sub_area,
-                ':rango' => $rango
+                ':rango' => $rango,
+                ':rol' => ROL_COLABORADOR
             ];
         }
 
