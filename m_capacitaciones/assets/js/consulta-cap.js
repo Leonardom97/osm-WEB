@@ -116,8 +116,12 @@ function renderBootstrapPagination(total) {
   pagUl.innerHTML = '';
 
   const totalPaginas = Math.max(1, Math.ceil(total / porPagina));
+  
+  if (totalPaginas <= 1) {
+    return;
+  }
 
-  // Prev
+  // Previous button
   const prevLi = document.createElement('li');
   prevLi.className = 'page-item' + (pagina === 1 ? ' disabled' : '');
   const prevA = document.createElement('a');
@@ -132,8 +136,57 @@ function renderBootstrapPagination(total) {
   prevLi.appendChild(prevA);
   pagUl.appendChild(prevLi);
 
-  // Números
-  for(let i=1; i<=totalPaginas; i++) {
+  // Calculate page numbers to show (max 7)
+  let startPage = 1;
+  let endPage = totalPaginas;
+  
+  if (totalPaginas > 7) {
+    if (pagina <= 4) {
+      // Near the beginning
+      startPage = 1;
+      endPage = 7;
+    } else if (pagina >= totalPaginas - 3) {
+      // Near the end
+      startPage = totalPaginas - 6;
+      endPage = totalPaginas;
+    } else {
+      // In the middle
+      startPage = pagina - 3;
+      endPage = pagina + 3;
+    }
+  }
+
+  // First page button if not in range
+  if (startPage > 1) {
+    const li = document.createElement('li');
+    li.className = 'page-item';
+    const a = document.createElement('a');
+    a.className = 'page-link';
+    a.href = '#';
+    a.textContent = '1';
+    a.onclick = function(e){
+      e.preventDefault();
+      pagina = 1;
+      renderTabla();
+    };
+    li.appendChild(a);
+    pagUl.appendChild(li);
+    
+    // Add ellipsis if there's a gap
+    if (startPage > 2) {
+      const ellipsisLi = document.createElement('li');
+      ellipsisLi.className = 'page-item disabled';
+      const ellipsisA = document.createElement('a');
+      ellipsisA.className = 'page-link';
+      ellipsisA.href = '#';
+      ellipsisA.textContent = '...';
+      ellipsisLi.appendChild(ellipsisA);
+      pagUl.appendChild(ellipsisLi);
+    }
+  }
+
+  // Page numbers
+  for(let i=startPage; i<=endPage; i++) {
     const li = document.createElement('li');
     li.className = 'page-item' + (i === pagina ? ' active' : '');
     const a = document.createElement('a');
@@ -149,7 +202,36 @@ function renderBootstrapPagination(total) {
     pagUl.appendChild(li);
   }
 
-  // Next
+  // Last page button if not in range
+  if (endPage < totalPaginas) {
+    // Add ellipsis if there's a gap
+    if (endPage < totalPaginas - 1) {
+      const ellipsisLi = document.createElement('li');
+      ellipsisLi.className = 'page-item disabled';
+      const ellipsisA = document.createElement('a');
+      ellipsisA.className = 'page-link';
+      ellipsisA.href = '#';
+      ellipsisA.textContent = '...';
+      ellipsisLi.appendChild(ellipsisA);
+      pagUl.appendChild(ellipsisLi);
+    }
+    
+    const li = document.createElement('li');
+    li.className = 'page-item';
+    const a = document.createElement('a');
+    a.className = 'page-link';
+    a.href = '#';
+    a.textContent = totalPaginas;
+    a.onclick = function(e){
+      e.preventDefault();
+      pagina = totalPaginas;
+      renderTabla();
+    };
+    li.appendChild(a);
+    pagUl.appendChild(li);
+  }
+
+  // Next button
   const nextLi = document.createElement('li');
   nextLi.className = 'page-item' + (pagina === totalPaginas ? ' disabled' : '');
   const nextA = document.createElement('a');
