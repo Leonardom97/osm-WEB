@@ -19,25 +19,17 @@ if (!isset($_SESSION['usuario_id'])) {
 try {
     switch ($action) {
         case 'list':
-            // List all training schedules with next training date
+            // List all training schedules with date columns
             $stmt = $pg->query("
                 SELECT 
                     p.*,
                     t.nombre AS tema_nombre,
                     c.cargo AS cargo_nombre,
+                    c.rango_cargo AS rango_nombre,
                     r.nombre AS rol_capacitador_nombre,
-                    (
-                        SELECT MIN(n.fecha_proxima)
-                        FROM cap_notificaciones n
-                        WHERE n.id_programacion = p.id
-                        AND n.estado IN ('pendiente', 'proximo_vencer', 'vencida')
-                    ) AS proxima_capacitacion,
-                    (
-                        SELECT MIN(n.dias_para_vencimiento)
-                        FROM cap_notificaciones n
-                        WHERE n.id_programacion = p.id
-                        AND n.estado IN ('pendiente', 'proximo_vencer', 'vencida')
-                    ) AS dias_para_proxima,
+                    p.fecha_ultima_capacitacion,
+                    p.fecha_proxima_capacitacion,
+                    p.fecha_notificacion_previa,
                     (
                         SELECT COUNT(DISTINCT n.id_colaborador)
                         FROM cap_notificaciones n
@@ -49,7 +41,7 @@ try {
                 INNER JOIN adm_cargos c ON p.id_cargo = c.id_cargo
                 INNER JOIN adm_roles r ON p.id_rol_capacitador = r.id
                 WHERE p.activo = true
-                ORDER BY c.cargo, t.nombre
+                ORDER BY p.fecha_proxima_capacitacion NULLS LAST, c.cargo, t.nombre
             ");
             $programaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             jsonResponse(['success' => true, 'data' => $programaciones]);
@@ -86,10 +78,16 @@ try {
                 }
             }
 
+            // Calculate initial dates
+            $frecuencia = intval($data['frecuencia_meses']);
+            $fecha_proxima = date('Y-m-d', strtotime("+{$frecuencia} months"));
+            $fecha_notificacion = date('Y-m-d', strtotime("+{$frecuencia} months -1 month"));
+
             $stmt = $pg->prepare("
                 INSERT INTO cap_programacion 
-                (id_tema, id_cargo, sub_area, frecuencia_meses, id_rol_capacitador, activo)
-                VALUES (?, ?, ?, ?, ?, true)
+                (id_tema, id_cargo, sub_area, frecuencia_meses, id_rol_capacitador, 
+                 fecha_proxima_capacitacion, fecha_notificacion_previa, activo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, true)
                 RETURNING id
             ");
             
@@ -97,8 +95,10 @@ try {
                 $data['id_tema'],
                 $data['id_cargo'],
                 trim($data['sub_area']),
-                $data['frecuencia_meses'],
-                $data['id_rol_capacitador']
+                $frecuencia,
+                $data['id_rol_capacitador'],
+                $fecha_proxima,
+                $fecha_notificacion
             ]);
             
             $id = $stmt->fetchColumn();
@@ -205,19 +205,27 @@ try {
                         continue;
                     }
 
+                    // Calculate initial dates
+                    $frecuencia = intval($item['frecuencia_meses'] ?? 12);
+                    $fecha_proxima = date('Y-m-d', strtotime("+{$frecuencia} months"));
+                    $fecha_notificacion = date('Y-m-d', strtotime("+{$frecuencia} months -1 month"));
+
                     // Insert
                     $stmt = $pg->prepare("
                         INSERT INTO cap_programacion 
-                        (id_tema, id_cargo, sub_area, frecuencia_meses, id_rol_capacitador, activo)
-                        VALUES (?, ?, ?, ?, ?, true)
+                        (id_tema, id_cargo, sub_area, frecuencia_meses, id_rol_capacitador, 
+                         fecha_proxima_capacitacion, fecha_notificacion_previa, activo)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, true)
                     ");
                     
                     $stmt->execute([
                         $item['id_tema'],
                         $item['id_cargo'],
                         $item['sub_area'] ?? null,
-                        $item['frecuencia_meses'] ?? 12,
-                        $item['id_rol_capacitador']
+                        $frecuencia,
+                        $item['id_rol_capacitador'],
+                        $fecha_proxima,
+                        $fecha_notificacion
                     ]);
                     
                     $inserted++;
