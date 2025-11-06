@@ -36,6 +36,9 @@
             
             await loadData();
             setupEventListeners();
+            
+            // Check for URL parameters to auto-open modal with pre-selected values
+            checkUrlParameters();
         } catch (error) {
             console.error('Error initializing page:', error);
             showAlert('Error al cargar la página', 'danger');
@@ -272,6 +275,47 @@
         }).join('');
     }
 
+    function checkUrlParameters() {
+        // Check if there are URL parameters for auto-opening the modal
+        const urlParams = new URLSearchParams(window.location.search);
+        const subAreaParam = urlParams.get('sub_area');
+        const cargoParam = urlParams.get('cargo');
+        
+        if (subAreaParam || cargoParam) {
+            // Open the modal
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Nueva Programación';
+            document.getElementById('formProgramacion').reset();
+            document.getElementById('programacionId').value = '';
+            
+            // Set sub_area if provided
+            if (subAreaParam) {
+                setTimeout(() => {
+                    const subAreaSelect = document.getElementById('inputSubArea');
+                    if (subAreaSelect) {
+                        subAreaSelect.value = decodeURIComponent(subAreaParam);
+                    }
+                }, 100);
+            }
+            
+            // Set cargo if provided
+            if (cargoParam) {
+                setTimeout(() => {
+                    const cargoSelect = document.getElementById('inputCargo');
+                    if (cargoSelect) {
+                        cargoSelect.value = cargoParam;
+                    }
+                }, 100);
+            }
+            
+            // Show the modal
+            new bootstrap.Modal(document.getElementById('modalProgramacion')).show();
+            
+            // Clean the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
     function setupEventListeners() {
         // New programming button
         document.getElementById('btnNuevaProgramacion').addEventListener('click', function() {
@@ -403,10 +447,33 @@
                 document.getElementById('modalTitle').textContent = 'Editar Programación';
                 document.getElementById('programacionId').value = id;
                 document.getElementById('inputCargo').value = prog.id_cargo;
-                document.getElementById('inputSubArea').value = prog.sub_area || '';
                 document.getElementById('inputTema').value = prog.id_tema;
                 document.getElementById('inputFrecuencia').value = prog.frecuencia_meses;
                 document.getElementById('inputRolCapacitador').value = prog.id_rol_capacitador;
+                
+                // Set sub_area - ensure the value exists in the dropdown first
+                const subAreaSelect = document.getElementById('inputSubArea');
+                const currentSubArea = prog.sub_area || '';
+                
+                // Check if the current sub_area exists in the options
+                let optionExists = false;
+                for (let i = 0; i < subAreaSelect.options.length; i++) {
+                    if (subAreaSelect.options[i].value === currentSubArea) {
+                        optionExists = true;
+                        break;
+                    }
+                }
+                
+                // If the option doesn't exist and we have a value, add it
+                if (!optionExists && currentSubArea) {
+                    const newOption = document.createElement('option');
+                    newOption.value = currentSubArea;
+                    newOption.textContent = currentSubArea;
+                    subAreaSelect.appendChild(newOption);
+                }
+                
+                // Now set the value
+                subAreaSelect.value = currentSubArea;
 
                 new bootstrap.Modal(document.getElementById('modalProgramacion')).show();
             }
