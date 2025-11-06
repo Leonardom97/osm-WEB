@@ -142,7 +142,7 @@
             return `
                 <li class="mb-2">
                     <strong>${alert.tema_nombre}</strong> - ${alert.cargo_nombre} 
-                    ${alert.sub_area ? `(${alert.sub_area})` : ''}
+                    ${alert.sub_area_nombre ? `(${alert.sub_area_nombre})` : ''}
                     <br>
                     ${statusText} (${fechaProxima}) - ${colaboradoresCount} colaborador(es) pendiente(s)
                     <br>
@@ -173,13 +173,13 @@
             inputCargo.appendChild(option);
         });
 
-        // Populate sub area select
+        // Populate sub area select with ID as value
         if (inputSubArea) {
             inputSubArea.innerHTML = '<option value="">Seleccione...</option>';
             subAreas.forEach(sa => {
                 const option = document.createElement('option');
-                option.value = sa.sub_area;
-                option.textContent = sa.sub_area;
+                option.value = sa.id_area;  // Store ID, not name
+                option.textContent = sa.sub_area;  // Display name
                 inputSubArea.appendChild(option);
             });
         }
@@ -254,7 +254,7 @@
             <tr>
                 <td>${prog.id}</td>
                 <td>${prog.cargo_nombre}</td>
-                <td>${prog.sub_area || '-'}</td>
+                <td>${prog.sub_area_nombre || '-'}</td>
                 <td>${prog.tema_nombre}</td>
                 <td>${prog.frecuencia_meses}</td>
                 <td><span class="badge bg-info">${prog.rol_capacitador_nombre}</span></td>
@@ -589,11 +589,12 @@
             // Find names for preview
             const cargo = cargos.find(c => c.id === item.id_cargo);
             const tema = temas.find(t => t.id === item.id_tema);
+            const subArea = subAreas.find(sa => sa.id_area === item.sub_area);
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${cargo ? cargo.cargo : cargo_id}</td>
-                <td>${item.sub_area || '-'}</td>
+                <td>${subArea ? subArea.sub_area : (item.sub_area || '-')}</td>
                 <td>${tema ? tema.nombre : tema_id}</td>
                 <td>${item.frecuencia_meses}</td>
                 <td>${rol.nombre}</td>

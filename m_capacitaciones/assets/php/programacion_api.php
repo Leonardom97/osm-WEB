@@ -26,6 +26,7 @@ try {
                     t.nombre AS tema_nombre,
                     c.cargo AS cargo_nombre,
                     r.nombre AS rol_capacitador_nombre,
+                    a.sub_area AS sub_area_nombre,
                     p.fecha_ultima_capacitacion,
                     p.fecha_proxima_capacitacion,
                     p.fecha_notificacion_previa,
@@ -39,6 +40,7 @@ try {
                 INNER JOIN cap_tema t ON p.id_tema = t.id
                 INNER JOIN adm_cargos c ON p.id_cargo = c.id_cargo
                 INNER JOIN adm_roles r ON p.id_rol_capacitador = r.id
+                LEFT JOIN adm_área a ON p.sub_area = a.id_area
                 WHERE p.activo = true
                 ORDER BY p.fecha_proxima_capacitacion NULLS LAST, c.cargo, t.nombre
             ");
@@ -54,11 +56,13 @@ try {
                     p.*,
                     t.nombre AS tema_nombre,
                     c.cargo AS cargo_nombre,
-                    r.nombre AS rol_capacitador_nombre
+                    r.nombre AS rol_capacitador_nombre,
+                    a.sub_area AS sub_area_nombre
                 FROM cap_programacion p
                 INNER JOIN cap_tema t ON p.id_tema = t.id
                 INNER JOIN adm_cargos c ON p.id_cargo = c.id_cargo
                 INNER JOIN adm_roles r ON p.id_rol_capacitador = r.id
+                LEFT JOIN adm_área a ON p.sub_area = a.id_area
                 WHERE p.id = ?
             ");
             $stmt->execute([$id]);
@@ -296,10 +300,10 @@ try {
             break;
 
         case 'get_sub_areas':
-            // Get all unique sub areas from adm_área table
-            // No cargo filter needed - return all available sub areas
+            // Get all unique sub areas from adm_área table with IDs
+            // Return id_area and sub_area name for proper ID-based storage
             $stmt = $pg->query("
-                SELECT DISTINCT sub_area
+                SELECT DISTINCT id_area, sub_area
                 FROM adm_área
                 WHERE sub_area IS NOT NULL
                   AND sub_area != ''
