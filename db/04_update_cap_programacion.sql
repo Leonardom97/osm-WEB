@@ -11,6 +11,12 @@ COMMENT ON COLUMN cap_programacion.fecha_ultima_capacitacion IS 'Date of the mos
 COMMENT ON COLUMN cap_programacion.fecha_proxima_capacitacion IS 'Date of the next scheduled training';
 COMMENT ON COLUMN cap_programacion.fecha_notificacion_previa IS 'Date when notification should be sent (1 month before next training)';
 
+-- Add id_colaborador column to cap_formulario_asistente if it doesn't exist
+ALTER TABLE cap_formulario_asistente
+ADD COLUMN IF NOT EXISTS id_colaborador INT;
+
+COMMENT ON COLUMN cap_formulario_asistente.id_colaborador IS 'Reference to adm_colaboradores.ac_id for tracking purposes';
+
 -- Function to update programacion dates when a new training is completed
 CREATE OR REPLACE FUNCTION actualizar_fechas_programacion()
 RETURNS TRIGGER AS $$

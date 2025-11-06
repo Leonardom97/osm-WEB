@@ -117,27 +117,33 @@
         }
         
         // Determine alert color based on most urgent alert
-        const mostUrgent = Math.min(...alerts.map(a => parseInt(a.dias_para_vencimiento) || 0));
-        const alertClass = mostUrgent < 0 ? 'alert-danger' : mostUrgent <= 3 ? 'alert-warning' : 'alert-info';
+        const mostUrgent = Math.min(...alerts.map(a => parseInt(a.dias_para_proxima) || 0));
+        const alertClass = mostUrgent < 0 ? 'alert-danger' : mostUrgent <= 7 ? 'alert-warning' : 'alert-info';
         
         alertsBox.className = `alert alert-dismissible fade show ${alertClass}`;
         
         alertsList.innerHTML = '<ul class="mb-0">' + alerts.map(alert => {
-            const dias = parseInt(alert.dias_para_vencimiento) || 0;
+            const dias = parseInt(alert.dias_para_proxima) || 0;
             const statusText = dias < 0 
                 ? `<strong class="text-danger">Vencida hace ${Math.abs(dias)} días</strong>`
                 : dias === 0
                 ? `<strong class="text-danger">Vence HOY</strong>`
+                : dias <= 30
+                ? `<strong>Vence en ${dias} días</strong>`
                 : `<strong>Vence en ${dias} días</strong>`;
             
             const colaboradoresCount = parseInt(alert.colaboradores_pendientes) || 0;
+            
+            const fechaProxima = alert.fecha_proxima_capacitacion 
+                ? new Date(alert.fecha_proxima_capacitacion).toLocaleDateString('es-CO')
+                : '-';
             
             return `
                 <li class="mb-2">
                     <strong>${alert.tema_nombre}</strong> - ${alert.cargo_nombre} 
                     ${alert.sub_area ? `(${alert.sub_area})` : ''}
                     <br>
-                    ${statusText} - ${colaboradoresCount} colaborador(es) pendiente(s)
+                    ${statusText} (${fechaProxima}) - ${colaboradoresCount} colaborador(es) pendiente(s)
                     <br>
                     <small class="text-muted">Rol: ${alert.rol_capacitador_nombre}</small>
                 </li>
