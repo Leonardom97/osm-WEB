@@ -117,13 +117,13 @@
         }
         
         // Determine alert color based on most urgent alert
-        const mostUrgent = Math.min(...alerts.map(a => parseInt(a.dias_para_vencimiento) || 0));
-        const alertClass = mostUrgent < 0 ? 'alert-danger' : mostUrgent <= 3 ? 'alert-warning' : 'alert-info';
+        const mostUrgent = Math.min(...alerts.map(a => parseInt(a.dias_para_proxima) || 0));
+        const alertClass = mostUrgent < 0 ? 'alert-danger' : mostUrgent <= 7 ? 'alert-warning' : 'alert-info';
         
         alertsBox.className = `alert alert-dismissible fade show ${alertClass}`;
         
         alertsList.innerHTML = '<ul class="mb-0">' + alerts.map(alert => {
-            const dias = parseInt(alert.dias_para_vencimiento) || 0;
+            const dias = parseInt(alert.dias_para_proxima) || 0;
             const statusText = dias < 0 
                 ? `<strong class="text-danger">Vencida hace ${Math.abs(dias)} días</strong>`
                 : dias === 0
@@ -132,12 +132,16 @@
             
             const colaboradoresCount = parseInt(alert.colaboradores_pendientes) || 0;
             
+            const fechaProxima = alert.fecha_proxima_capacitacion 
+                ? new Date(alert.fecha_proxima_capacitacion).toLocaleDateString('es-CO')
+                : '-';
+            
             return `
                 <li class="mb-2">
                     <strong>${alert.tema_nombre}</strong> - ${alert.cargo_nombre} 
                     ${alert.sub_area ? `(${alert.sub_area})` : ''}
                     <br>
-                    ${statusText} - ${colaboradoresCount} colaborador(es) pendiente(s)
+                    ${statusText} (${fechaProxima}) - ${colaboradoresCount} colaborador(es) pendiente(s)
                     <br>
                     <small class="text-muted">Rol: ${alert.rol_capacitador_nombre}</small>
                 </li>
@@ -199,25 +203,43 @@
         const data = filterData || programaciones;
 
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay programaciones registradas</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center">No hay programaciones registradas</td></tr>';
             return;
         }
 
         tbody.innerHTML = data.map(prog => {
-            const proximaFecha = prog.proxima_capacitacion ? new Date(prog.proxima_capacitacion).toLocaleDateString('es-CO') : '-';
-            const diasPara = prog.dias_para_proxima !== null ? parseInt(prog.dias_para_proxima) : null;
+            // Format dates
+            const fechaUltima = prog.fecha_ultima_capacitacion 
+                ? new Date(prog.fecha_ultima_capacitacion).toLocaleDateString('es-CO') 
+                : '-';
+            const fechaProxima = prog.fecha_proxima_capacitacion 
+                ? new Date(prog.fecha_proxima_capacitacion).toLocaleDateString('es-CO') 
+                : '-';
+            const fechaNotificacion = prog.fecha_notificacion_previa 
+                ? new Date(prog.fecha_notificacion_previa).toLocaleDateString('es-CO') 
+                : '-';
+            
+            // Calculate days until next training
+            let diasPara = null;
+            if (prog.fecha_proxima_capacitacion) {
+                const hoy = new Date();
+                const proxima = new Date(prog.fecha_proxima_capacitacion);
+                diasPara = Math.floor((proxima - hoy) / (1000 * 60 * 60 * 24));
+            }
+            
             const pendientes = prog.colaboradores_pendientes || 0;
             
-            let fechaBadge = '-';
-            if (proximaFecha !== '-') {
+            // Format next training date with badge
+            let fechaProximaBadge = '-';
+            if (fechaProxima !== '-') {
                 if (diasPara < 0) {
-                    fechaBadge = `<span class="badge bg-danger">${proximaFecha}<br><small>Vencida</small></span>`;
+                    fechaProximaBadge = `<span class="badge bg-danger">${fechaProxima}<br><small>Vencida (${Math.abs(diasPara)} días)</small></span>`;
                 } else if (diasPara <= 7) {
-                    fechaBadge = `<span class="badge bg-warning text-dark">${proximaFecha}<br><small>En ${diasPara} días</small></span>`;
+                    fechaProximaBadge = `<span class="badge bg-warning text-dark">${fechaProxima}<br><small>En ${diasPara} días</small></span>`;
                 } else if (diasPara <= 30) {
-                    fechaBadge = `<span class="badge bg-info">${proximaFecha}<br><small>En ${diasPara} días</small></span>`;
+                    fechaProximaBadge = `<span class="badge bg-info">${fechaProxima}<br><small>En ${diasPara} días</small></span>`;
                 } else {
-                    fechaBadge = `<span class="badge bg-secondary">${proximaFecha}<br><small>En ${diasPara} días</small></span>`;
+                    fechaProximaBadge = `<span class="badge bg-secondary">${fechaProxima}<br><small>En ${diasPara} días</small></span>`;
                 }
             }
             
@@ -233,7 +255,9 @@
                 <td>${prog.tema_nombre}</td>
                 <td>${prog.frecuencia_meses}</td>
                 <td><span class="badge bg-info">${prog.rol_capacitador_nombre}</span></td>
-                <td class="text-center">${fechaBadge}</td>
+                <td class="text-center">${fechaUltima}</td>
+                <td class="text-center">${fechaProximaBadge}</td>
+                <td class="text-center">${fechaNotificacion}</td>
                 <td class="text-center">${pendientesBadge}</td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="window.editProgramacion(${prog.id})">
