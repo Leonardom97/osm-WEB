@@ -28,6 +28,16 @@
 
     document.addEventListener('DOMContentLoaded', async function() {
         try {
+            console.log('Dashboard initializing...');
+            
+            // Check if XLSX library is loaded
+            if (typeof XLSX === 'undefined') {
+                console.error('XLSX library not loaded!');
+                showAlert('Advertencia: Biblioteca de Excel no cargada. Las exportaciones podrían no funcionar.', 'warning');
+            } else {
+                console.log('XLSX library loaded successfully');
+            }
+            
             await includeComponent('../includes/navbar.html', '#navbar');
             await includeComponent('../includes/sidebar.html', '#sidebar');
             
@@ -35,36 +45,58 @@
             
             await loadData();
             setupEventListeners();
+            
+            console.log('Dashboard initialized successfully');
         } catch (error) {
             console.error('Error initializing page:', error);
-            showAlert('Error al cargar la página', 'danger');
+            showAlert('Error al cargar la página: ' + error.message, 'danger');
         }
     });
 
     async function loadData() {
         try {
+            console.log('Loading dashboard data...');
             const [dataRes, filtersRes] = await Promise.all([
-                fetch('assets/php/malla_api.php?action=get_malla'),
-                fetch('assets/php/malla_api.php?action=get_filters')
+                fetch('assets/php/malla_api.php?action=get_malla', { cache: 'no-store' }),
+                fetch('assets/php/malla_api.php?action=get_filters', { cache: 'no-store' })
             ]);
+
+            console.log('Data response status:', dataRes.status);
+            console.log('Filters response status:', filtersRes.status);
+
+            if (!dataRes.ok || !filtersRes.ok) {
+                throw new Error(`HTTP error! Data: ${dataRes.status}, Filters: ${filtersRes.status}`);
+            }
 
             const dataResult = await dataRes.json();
             const filtersResult = await filtersRes.json();
 
+            console.log('Data result:', dataResult);
+            console.log('Filters result:', filtersResult);
+
             if (dataResult.success) {
-                dashboardData = dataResult.data;
+                dashboardData = dataResult.data || [];
+                console.log(`Loaded ${dashboardData.length} records`);
                 updateStatistics(dashboardData);
                 updateTopSummaries(dashboardData);
                 renderTable(dashboardData);
+            } else {
+                console.error('Data loading failed:', dataResult.error);
+                showAlert('Error al cargar datos: ' + (dataResult.error || 'Error desconocido'), 'danger');
             }
 
             if (filtersResult.success) {
                 filters = filtersResult.data;
                 populateFilters();
+            } else {
+                console.error('Filters loading failed:', filtersResult.error);
+                showAlert('Error al cargar filtros: ' + (filtersResult.error || 'Error desconocido'), 'warning');
             }
         } catch (error) {
             console.error('Error loading data:', error);
-            showAlert('Error al cargar datos', 'danger');
+            showAlert('Error al cargar datos: ' + error.message, 'danger');
+            // Show empty state
+            renderTable([]);
         }
     }
 
@@ -314,89 +346,128 @@
     }
 
     function exportDetailedExcel() {
+        console.log('Exporting detailed Excel...');
+        
+        if (typeof XLSX === 'undefined') {
+            console.error('XLSX library not loaded');
+            alert('Error: Biblioteca de Excel no cargada. Por favor, recargue la página.');
+            return;
+        }
+
         if (dashboardData.length === 0) {
             alert('No hay datos para exportar');
             return;
         }
 
-        // Get currently displayed data
-        const tbody = document.querySelector('#tableDashboard tbody');
-        const rows = tbody.querySelectorAll('tr');
-        
-        // If no data rows, use full dataset
-        const dataToExport = dashboardData;
+        try {
+            // Get currently displayed data
+            const tbody = document.querySelector('#tableDashboard tbody');
+            const rows = tbody.querySelectorAll('tr');
+            
+            // If no data rows, use full dataset
+            const dataToExport = dashboardData;
 
-        const exportData = dataToExport.map(record => ({
-            'Estado': getEstadoText(record.estado),
-            'Colaborador': record.nombre_completo,
-            'Cédula': record.ac_cedula,
-            'Cargo': record.cargo_nombre,
-            'Sub Área': record.sub_area_nombre || '-',
-            'Tema': record.tema_nombre,
-            'Frecuencia (meses)': record.frecuencia_meses,
-            'Última Capacitación': record.ultima_capacitacion 
-                ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
-                : '-',
-            'Próxima Capacitación': record.proxima_capacitacion 
-                ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
-                : '-',
-            'Días Restantes': record.dias_restantes !== null ? record.dias_restantes : '-',
-            'Rol Capacitador': record.rol_capacitador_nombre
-        }));
+            const exportData = dataToExport.map(record => ({
+                'Estado': getEstadoText(record.estado),
+                'Situación': record.situacion || '-',
+                'Colaborador': record.nombre_completo,
+                'Cédula': record.ac_cedula,
+                'Cargo': record.cargo_nombre,
+                'Sub Área': record.sub_area_nombre || '-',
+                'Tema': record.tema_nombre,
+                'Frecuencia (meses)': record.frecuencia_meses,
+                'Última Capacitación': record.ultima_capacitacion 
+                    ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
+                    : '-',
+                'Próxima Capacitación': record.proxima_capacitacion 
+                    ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
+                    : '-',
+                'Días Restantes': record.dias_restantes !== null ? record.dias_restantes : '-',
+                'Rol Capacitador': record.rol_capacitador_nombre
+            }));
 
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Dashboard Detallado');
+            console.log(`Exporting ${exportData.length} records`);
 
-        const filename = `Dashboard_Capacitaciones_Detallado_${new Date().toISOString().split('T')[0]}.xlsx`;
-        XLSX.writeFile(wb, filename);
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Dashboard Detallado');
+
+            const filename = `Dashboard_Capacitaciones_Detallado_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            console.log('Excel file generated successfully');
+            showAlert('Archivo Excel generado exitosamente', 'success');
+        } catch (error) {
+            console.error('Error exporting Excel:', error);
+            alert('Error al generar archivo Excel: ' + error.message);
+        }
     }
 
     function exportSummaryExcel() {
+        console.log('Exporting summary Excel...');
+        
+        if (typeof XLSX === 'undefined') {
+            console.error('XLSX library not loaded');
+            alert('Error: Biblioteca de Excel no cargada. Por favor, recargue la página.');
+            return;
+        }
+
         if (dashboardData.length === 0) {
             alert('No hay datos para exportar');
             return;
         }
 
-        // Create summary by employee
-        const employeeSummary = {};
-        
-        dashboardData.forEach(record => {
-            const key = record.ac_id;
-            if (!employeeSummary[key]) {
-                employeeSummary[key] = {
-                    nombre: record.nombre_completo,
-                    cedula: record.ac_cedula,
-                    cargo: record.cargo_nombre,
-                    sub_area: record.sub_area_nombre || '-',
-                    al_dia: 0,
-                    pendiente: 0,
-                    proximo_vencer: 0,
-                    vencida: 0
-                };
-            }
+        try {
+            // Create summary by employee
+            const employeeSummary = {};
             
-            employeeSummary[key][record.estado] = (employeeSummary[key][record.estado] || 0) + 1;
-        });
+            dashboardData.forEach(record => {
+                const key = record.ac_id;
+                if (!employeeSummary[key]) {
+                    employeeSummary[key] = {
+                        nombre: record.nombre_completo,
+                        cedula: record.ac_cedula,
+                        cargo: record.cargo_nombre,
+                        sub_area: record.sub_area_nombre || '-',
+                        situacion: record.situacion || '-',
+                        al_dia: 0,
+                        pendiente: 0,
+                        proximo_vencer: 0,
+                        vencida: 0
+                    };
+                }
+                
+                employeeSummary[key][record.estado] = (employeeSummary[key][record.estado] || 0) + 1;
+            });
 
-        const summaryData = Object.values(employeeSummary).map(emp => ({
-            'Colaborador': emp.nombre,
-            'Cédula': emp.cedula,
-            'Cargo': emp.cargo,
-            'Sub Área': emp.sub_area,
-            'Al Día': emp.al_dia || 0,
-            'Próximas a Vencer': emp.proximo_vencer || 0,
-            'Pendientes': emp.pendiente || 0,
-            'Vencidas': emp.vencida || 0,
-            'Total Capacitaciones': (emp.al_dia || 0) + (emp.pendiente || 0) + (emp.proximo_vencer || 0) + (emp.vencida || 0)
-        }));
+            const summaryData = Object.values(employeeSummary).map(emp => ({
+                'Colaborador': emp.nombre,
+                'Cédula': emp.cedula,
+                'Cargo': emp.cargo,
+                'Sub Área': emp.sub_area,
+                'Situación': emp.situacion,
+                'Al Día': emp.al_dia || 0,
+                'Próximas a Vencer': emp.proximo_vencer || 0,
+                'Pendientes': emp.pendiente || 0,
+                'Vencidas': emp.vencida || 0,
+                'Total Capacitaciones': (emp.al_dia || 0) + (emp.pendiente || 0) + (emp.proximo_vencer || 0) + (emp.vencida || 0)
+            }));
 
-        const ws = XLSX.utils.json_to_sheet(summaryData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Resumen por Colaborador');
+            console.log(`Exporting summary for ${summaryData.length} employees`);
 
-        const filename = `Dashboard_Capacitaciones_Resumen_${new Date().toISOString().split('T')[0]}.xlsx`;
-        XLSX.writeFile(wb, filename);
+            const ws = XLSX.utils.json_to_sheet(summaryData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Resumen por Colaborador');
+
+            const filename = `Dashboard_Capacitaciones_Resumen_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            console.log('Summary Excel file generated successfully');
+            showAlert('Archivo Excel de resumen generado exitosamente', 'success');
+        } catch (error) {
+            console.error('Error exporting summary Excel:', error);
+            alert('Error al generar archivo Excel de resumen: ' + error.message);
+        }
     }
 
     function getEstadoText(estado) {
