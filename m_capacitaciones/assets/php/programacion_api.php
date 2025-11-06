@@ -81,16 +81,26 @@ try {
                 }
             }
 
-            // Calculate initial dates
+            // Calculate dates based on fecha_ultima_capacitacion if provided
             $frecuencia = intval($data['frecuencia_meses']);
-            $fecha_proxima = date('Y-m-d', strtotime("+{$frecuencia} months"));
-            $fecha_notificacion = date('Y-m-d', strtotime("+{$frecuencia} months -1 month"));
+            $fecha_ultima = $data['fecha_ultima_capacitacion'] ?? null;
+            
+            if ($fecha_ultima) {
+                // If last training date is provided, calculate from that date
+                $fecha_proxima = date('Y-m-d', strtotime("$fecha_ultima +{$frecuencia} months"));
+                $fecha_notificacion = date('Y-m-d', strtotime("$fecha_proxima -1 month"));
+            } else {
+                // Otherwise, calculate from today
+                $fecha_ultima = null;
+                $fecha_proxima = date('Y-m-d', strtotime("+{$frecuencia} months"));
+                $fecha_notificacion = date('Y-m-d', strtotime("+{$frecuencia} months -1 month"));
+            }
 
             $stmt = $pg->prepare("
                 INSERT INTO cap_programacion 
                 (id_tema, id_cargo, sub_area, frecuencia_meses, id_rol_capacitador, 
-                 fecha_proxima_capacitacion, fecha_notificacion_previa, activo)
-                VALUES (?, ?, ?, ?, ?, ?, ?, true)
+                 fecha_ultima_capacitacion, fecha_proxima_capacitacion, fecha_notificacion_previa, activo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, true)
                 RETURNING id
             ");
             
@@ -100,6 +110,7 @@ try {
                 trim($data['sub_area']),
                 $frecuencia,
                 $data['id_rol_capacitador'],
+                $fecha_ultima,
                 $fecha_proxima,
                 $fecha_notificacion
             ]);
@@ -129,24 +140,61 @@ try {
                 }
             }
 
-            $stmt = $pg->prepare("
-                UPDATE cap_programacion 
-                SET id_tema = ?, 
-                    id_cargo = ?, 
-                    sub_area = ?, 
-                    frecuencia_meses = ?, 
-                    id_rol_capacitador = ?
-                WHERE id = ?
-            ");
+            // Check if fecha_ultima_capacitacion was updated
+            $fecha_ultima = $data['fecha_ultima_capacitacion'] ?? null;
+            $frecuencia = intval($data['frecuencia_meses']);
             
-            $stmt->execute([
-                $data['id_tema'],
-                $data['id_cargo'],
-                trim($data['sub_area']),
-                $data['frecuencia_meses'],
-                $data['id_rol_capacitador'],
-                $id
-            ]);
+            // Build the update query dynamically
+            if ($fecha_ultima) {
+                // If last training date is provided, recalculate future dates
+                $fecha_proxima = date('Y-m-d', strtotime("$fecha_ultima +{$frecuencia} months"));
+                $fecha_notificacion = date('Y-m-d', strtotime("$fecha_proxima -1 month"));
+                
+                $stmt = $pg->prepare("
+                    UPDATE cap_programacion 
+                    SET id_tema = ?, 
+                        id_cargo = ?, 
+                        sub_area = ?, 
+                        frecuencia_meses = ?, 
+                        id_rol_capacitador = ?,
+                        fecha_ultima_capacitacion = ?,
+                        fecha_proxima_capacitacion = ?,
+                        fecha_notificacion_previa = ?
+                    WHERE id = ?
+                ");
+                
+                $stmt->execute([
+                    $data['id_tema'],
+                    $data['id_cargo'],
+                    trim($data['sub_area']),
+                    $frecuencia,
+                    $data['id_rol_capacitador'],
+                    $fecha_ultima,
+                    $fecha_proxima,
+                    $fecha_notificacion,
+                    $id
+                ]);
+            } else {
+                // Just update basic fields, keep existing dates
+                $stmt = $pg->prepare("
+                    UPDATE cap_programacion 
+                    SET id_tema = ?, 
+                        id_cargo = ?, 
+                        sub_area = ?, 
+                        frecuencia_meses = ?, 
+                        id_rol_capacitador = ?
+                    WHERE id = ?
+                ");
+                
+                $stmt->execute([
+                    $data['id_tema'],
+                    $data['id_cargo'],
+                    trim($data['sub_area']),
+                    $frecuencia,
+                    $data['id_rol_capacitador'],
+                    $id
+                ]);
+            }
             
             // Update notifications
             $pg->query("SELECT actualizar_notificaciones_capacitacion()");

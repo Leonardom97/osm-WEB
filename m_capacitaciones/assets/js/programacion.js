@@ -447,6 +447,12 @@
             id_rol_capacitador: document.getElementById('inputRolCapacitador').value
         };
 
+        // Include fecha_ultima_capacitacion if provided
+        const fechaUltima = document.getElementById('inputFechaUltima').value;
+        if (fechaUltima) {
+            data.fecha_ultima_capacitacion = fechaUltima;
+        }
+
         if (editingId) {
             data.id = editingId;
         }
@@ -489,6 +495,9 @@
                 document.getElementById('inputTema').value = prog.id_tema;
                 document.getElementById('inputFrecuencia').value = prog.frecuencia_meses;
                 document.getElementById('inputRolCapacitador').value = prog.id_rol_capacitador;
+                
+                // Set fecha_ultima_capacitacion if available
+                document.getElementById('inputFechaUltima').value = prog.fecha_ultima_capacitacion || '';
                 
                 // Set sub_area - ensure the value exists in the dropdown first
                 const subAreaSelect = document.getElementById('inputSubArea');
