@@ -25,7 +25,6 @@ try {
                     p.*,
                     t.nombre AS tema_nombre,
                     c.cargo AS cargo_nombre,
-                    c.rango_cargo AS rango_nombre,
                     r.nombre AS rol_capacitador_nombre,
                     p.fecha_ultima_capacitacion,
                     p.fecha_proxima_capacitacion,

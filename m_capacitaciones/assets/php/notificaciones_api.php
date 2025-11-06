@@ -178,8 +178,10 @@ try {
                 jsonResponse(['success' => true, 'data' => []]);
             }
 
-            // Get trainings that are due or will be due within 30 days
-            // Use fecha_notificacion_previa to determine when to alert
+            // Get trainings that need attention:
+            // - Show alerts starting from fecha_notificacion_previa (1 month before)
+            // - Keep showing alerts up to 30 days after the training was due
+            //   (this gives trainers time to schedule the training even if overdue)
             $placeholders = implode(',', array_fill(0, count($roles), '?'));
             $stmt = $pg->prepare("
                 SELECT 

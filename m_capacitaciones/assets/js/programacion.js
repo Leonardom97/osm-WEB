@@ -128,8 +128,6 @@
                 ? `<strong class="text-danger">Vencida hace ${Math.abs(dias)} días</strong>`
                 : dias === 0
                 ? `<strong class="text-danger">Vence HOY</strong>`
-                : dias <= 30
-                ? `<strong>Vence en ${dias} días</strong>`
                 : `<strong>Vence en ${dias} días</strong>`;
             
             const colaboradoresCount = parseInt(alert.colaboradores_pendientes) || 0;
