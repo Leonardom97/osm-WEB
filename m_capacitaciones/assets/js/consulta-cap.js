@@ -142,17 +142,17 @@ function renderBootstrapPagination(total) {
   
   if (totalPaginas > 7) {
     if (pagina <= 4) {
-      // Near the beginning
+      // Near the beginning: show 1 2 3 4 5 ... last
       startPage = 1;
-      endPage = 7;
+      endPage = 5;
     } else if (pagina >= totalPaginas - 3) {
-      // Near the end
-      startPage = totalPaginas - 6;
+      // Near the end: show 1 ... N-4 N-3 N-2 N-1 N
+      startPage = totalPaginas - 4;
       endPage = totalPaginas;
     } else {
-      // In the middle
-      startPage = pagina - 3;
-      endPage = pagina + 3;
+      // In the middle: show 1 ... current-1 current current+1 ... last
+      startPage = pagina - 1;
+      endPage = pagina + 1;
     }
   }
 
