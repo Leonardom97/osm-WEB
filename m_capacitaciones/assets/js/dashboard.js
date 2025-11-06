@@ -12,6 +12,9 @@
         roles: []
     };
     let currentFilters = {};
+    let currentPage = 1;
+    let recordsPerPage = 10;
+    let currentFilteredData = [];
 
     // Load HTML components
     async function includeComponent(file, selector) {
@@ -76,6 +79,7 @@
 
             if (dataResult.success) {
                 dashboardData = dataResult.data || [];
+                currentFilteredData = dashboardData;
                 console.log(`Loaded ${dashboardData.length} records`);
                 updateStatistics(dashboardData);
                 updateTopSummaries(dashboardData);
@@ -266,12 +270,21 @@
         if (!data || data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="11" class="text-center py-4"><i class="fas fa-info-circle"></i> No hay registros para mostrar</td></tr>';
             document.getElementById('recordCount').textContent = 'Total: 0 registros';
+            renderPagination(0);
             return;
         }
 
+        currentFilteredData = data;
         console.log(`Rendering ${data.length} records in table`);
 
-        tbody.innerHTML = data.map(record => {
+        // Calculate pagination
+        const totalRecords = data.length;
+        const totalPages = Math.ceil(totalRecords / recordsPerPage);
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = Math.min(startIndex + recordsPerPage, totalRecords);
+        const paginatedData = data.slice(startIndex, endIndex);
+
+        tbody.innerHTML = paginatedData.map(record => {
             const estado = record.estado || 'pendiente';
             let estadoBadge = '';
             let rowClass = '';
@@ -335,7 +348,119 @@
             `;
         }).join('');
 
-        document.getElementById('recordCount').textContent = `Total: ${data.length} registros`;
+        document.getElementById('recordCount').textContent = `Mostrando ${startIndex + 1}-${endIndex} de ${totalRecords} registros`;
+        renderPagination(totalRecords);
+    }
+
+    function renderPagination(totalRecords) {
+        const paginationContainer = document.getElementById('tablePagination');
+        const totalPages = Math.ceil(totalRecords / recordsPerPage);
+
+        if (totalPages <= 1) {
+            paginationContainer.innerHTML = '';
+            return;
+        }
+
+        let paginationHTML = '';
+
+        // Previous button
+        paginationHTML += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        `;
+
+        // Calculate page numbers to show (max 7)
+        let startPage = 1;
+        let endPage = totalPages;
+        
+        if (totalPages > 7) {
+            if (currentPage <= 4) {
+                // Near the beginning
+                startPage = 1;
+                endPage = 7;
+            } else if (currentPage >= totalPages - 3) {
+                // Near the end
+                startPage = totalPages - 6;
+                endPage = totalPages;
+            } else {
+                // In the middle
+                startPage = currentPage - 3;
+                endPage = currentPage + 3;
+            }
+        }
+
+        // First page button if not in range
+        if (startPage > 1) {
+            paginationHTML += `
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="1">1</a>
+                </li>
+            `;
+            
+            // Add ellipsis if there's a gap
+            if (startPage > 2) {
+                paginationHTML += `
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                `;
+            }
+        }
+
+        // Page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHTML += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
+            `;
+        }
+
+        // Last page button if not in range
+        if (endPage < totalPages) {
+            // Add ellipsis if there's a gap
+            if (endPage < totalPages - 1) {
+                paginationHTML += `
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                `;
+            }
+            
+            paginationHTML += `
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
+                </li>
+            `;
+        }
+
+        // Next button
+        paginationHTML += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        `;
+
+        paginationContainer.innerHTML = paginationHTML;
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(currentFilteredData.length / recordsPerPage);
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            renderTable(currentFilteredData);
+        }
+    }
+
+    function changeRecordsPerPage(value) {
+        recordsPerPage = parseInt(value);
+        currentPage = 1;
+        renderTable(currentFilteredData);
     }
 
     function applyFilters() {
@@ -381,6 +506,7 @@
 
         console.log(`Filtered from ${dashboardData.length} to ${filtered.length} records`);
 
+        currentPage = 1; // Reset to first page when filters are applied
         updateStatistics(filtered);
         updateTopSummaries(filtered);
         renderTable(filtered);
@@ -394,6 +520,7 @@
         document.getElementById('filterTema').value = '';
         document.getElementById('filterRol').value = '';
         
+        currentPage = 1; // Reset to first page when filters are cleared
         updateStatistics(dashboardData);
         updateTopSummaries(dashboardData);
         renderTable(dashboardData);
@@ -534,6 +661,19 @@
         document.getElementById('btnExportSummaryExcel').addEventListener('click', exportSummaryExcel);
         document.getElementById('btnApplyFilters').addEventListener('click', applyFilters);
         document.getElementById('btnClearFilters').addEventListener('click', clearFilters);
+        document.getElementById('recordsPerPage').addEventListener('change', function(e) {
+            changeRecordsPerPage(e.target.value);
+        });
+        
+        // Event delegation for pagination links
+        document.getElementById('tablePagination').addEventListener('click', function(e) {
+            e.preventDefault();
+            const link = e.target.closest('.page-link');
+            if (link && link.hasAttribute('data-page')) {
+                const page = parseInt(link.getAttribute('data-page'));
+                changePage(page);
+            }
+        });
     }
 
     function showAlert(message, type) {
