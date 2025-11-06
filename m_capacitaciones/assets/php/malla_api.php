@@ -80,7 +80,7 @@ try {
                             EXTRACT(DAY FROM (uc.ultima_fecha_ejecutada + (cp.frecuencia_meses || ' months')::INTERVAL - CURRENT_DATE))::int
                         -- Otherwise calculate from programmed date
                         WHEN cp.programacion_proxima_fecha IS NOT NULL THEN
-                            EXTRACT(DAY FROM (cp.programacion_proxima_fecha - CURRENT_DATE))::int
+                            (cp.programacion_proxima_fecha - CURRENT_DATE)::int
                         ELSE
                             NULL
                     END AS dias_restantes,
@@ -245,7 +245,7 @@ try {
                             EXTRACT(DAY FROM (uc.ultima_fecha + (pa.frecuencia_meses || ' months')::INTERVAL - CURRENT_DATE))::int
                         -- Otherwise calculate from programmed date
                         WHEN pa.fecha_proxima_capacitacion IS NOT NULL THEN
-                            EXTRACT(DAY FROM (pa.fecha_proxima_capacitacion - CURRENT_DATE))::int
+                            (pa.fecha_proxima_capacitacion - CURRENT_DATE)::int
                         ELSE
                             NULL
                     END AS dias_restantes
