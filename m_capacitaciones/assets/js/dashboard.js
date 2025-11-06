@@ -1,0 +1,430 @@
+// assets/js/dashboard.js
+// Manages training dashboard and reporting interface
+
+(function() {
+    'use strict';
+
+    let dashboardData = [];
+    let filters = {
+        cargos: [],
+        sub_areas: [],
+        temas: [],
+        roles: []
+    };
+    let currentFilters = {};
+
+    // Load HTML components
+    async function includeComponent(file, selector) {
+        try {
+            const res = await fetch(file, { cache: 'no-store' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const html = await res.text();
+            const el = document.querySelector(selector);
+            if (el) el.innerHTML = html;
+        } catch (err) {
+            console.error(`Error loading ${file}:`, err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            await includeComponent('../includes/navbar.html', '#navbar');
+            await includeComponent('../includes/sidebar.html', '#sidebar');
+            
+            document.body.style.visibility = 'visible';
+            
+            await loadData();
+            setupEventListeners();
+        } catch (error) {
+            console.error('Error initializing page:', error);
+            showAlert('Error al cargar la página', 'danger');
+        }
+    });
+
+    async function loadData() {
+        try {
+            const [dataRes, filtersRes] = await Promise.all([
+                fetch('assets/php/malla_api.php?action=get_malla'),
+                fetch('assets/php/malla_api.php?action=get_filters')
+            ]);
+
+            const dataResult = await dataRes.json();
+            const filtersResult = await filtersRes.json();
+
+            if (dataResult.success) {
+                dashboardData = dataResult.data;
+                updateStatistics(dashboardData);
+                updateTopSummaries(dashboardData);
+                renderTable(dashboardData);
+            }
+
+            if (filtersResult.success) {
+                filters = filtersResult.data;
+                populateFilters();
+            }
+        } catch (error) {
+            console.error('Error loading data:', error);
+            showAlert('Error al cargar datos', 'danger');
+        }
+    }
+
+    function updateStatistics(data) {
+        // Get unique employees
+        const uniqueEmployees = [...new Set(data.map(r => r.ac_id))];
+        
+        // Count trainings by status
+        const alDiaCount = data.filter(r => r.estado === 'al_dia').length;
+        const pendientesCount = data.filter(r => r.estado === 'pendiente' || r.estado === 'proximo_vencer').length;
+        const vencidasCount = data.filter(r => r.estado === 'vencida').length;
+        
+        document.getElementById('statTotalColaboradores').textContent = uniqueEmployees.length;
+        document.getElementById('statCapacitados').textContent = alDiaCount;
+        document.getElementById('statPendientes').textContent = pendientesCount;
+        document.getElementById('statVencidas').textContent = vencidasCount;
+    }
+
+    function updateTopSummaries(data) {
+        // Top cargos with pending trainings
+        const pendingData = data.filter(r => r.estado === 'pendiente' || r.estado === 'vencida');
+        const cargoCount = {};
+        
+        pendingData.forEach(r => {
+            cargoCount[r.cargo_nombre] = (cargoCount[r.cargo_nombre] || 0) + 1;
+        });
+        
+        const topCargos = Object.entries(cargoCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+        
+        const cargosContainer = document.getElementById('topCargosPendientes');
+        if (topCargos.length > 0) {
+            cargosContainer.innerHTML = `
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Cargo</th>
+                            <th class="text-end">Pendientes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${topCargos.map(([cargo, count]) => `
+                            <tr>
+                                <td>${cargo}</td>
+                                <td class="text-end"><span class="badge bg-warning text-dark">${count}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            cargosContainer.innerHTML = '<p class="text-muted text-center">No hay pendientes</p>';
+        }
+        
+        // Top temas with pending trainings
+        const temaCount = {};
+        
+        pendingData.forEach(r => {
+            temaCount[r.tema_nombre] = (temaCount[r.tema_nombre] || 0) + 1;
+        });
+        
+        const topTemas = Object.entries(temaCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+        
+        const temasContainer = document.getElementById('topTemasPendientes');
+        if (topTemas.length > 0) {
+            temasContainer.innerHTML = `
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Tema</th>
+                            <th class="text-end">Pendientes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${topTemas.map(([tema, count]) => `
+                            <tr>
+                                <td>${tema}</td>
+                                <td class="text-end"><span class="badge bg-warning text-dark">${count}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            temasContainer.innerHTML = '<p class="text-muted text-center">No hay pendientes</p>';
+        }
+    }
+
+    function populateFilters() {
+        const cargoSelect = document.getElementById('filterCargo');
+        const subAreaSelect = document.getElementById('filterSubArea');
+        const temaSelect = document.getElementById('filterTema');
+        const rolSelect = document.getElementById('filterRol');
+
+        filters.cargos.forEach(cargo => {
+            const option = document.createElement('option');
+            option.value = cargo.id;
+            option.textContent = cargo.cargo;
+            cargoSelect.appendChild(option);
+        });
+
+        filters.sub_areas.forEach(sa => {
+            const option = document.createElement('option');
+            option.value = sa.id_area;
+            option.textContent = sa.sub_area;
+            subAreaSelect.appendChild(option);
+        });
+
+        filters.temas.forEach(tema => {
+            const option = document.createElement('option');
+            option.value = tema.id;
+            option.textContent = tema.nombre;
+            temaSelect.appendChild(option);
+        });
+
+        filters.roles.forEach(rol => {
+            const option = document.createElement('option');
+            option.value = rol.id;
+            option.textContent = rol.nombre;
+            rolSelect.appendChild(option);
+        });
+    }
+
+    function renderTable(data) {
+        const tbody = document.querySelector('#tableDashboard tbody');
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center">No hay registros</td></tr>';
+            document.getElementById('recordCount').textContent = 'Total: 0 registros';
+            return;
+        }
+
+        tbody.innerHTML = data.map(record => {
+            const estado = record.estado || 'pendiente';
+            let estadoBadge = '';
+            
+            switch(estado) {
+                case 'al_dia':
+                    estadoBadge = '<span class="badge bg-success">Al Día</span>';
+                    break;
+                case 'proximo_vencer':
+                    estadoBadge = '<span class="badge bg-warning text-dark">Próximo</span>';
+                    break;
+                case 'vencida':
+                    estadoBadge = '<span class="badge bg-danger">Vencida</span>';
+                    break;
+                default:
+                    estadoBadge = '<span class="badge bg-secondary">Pendiente</span>';
+            }
+
+            // Get situacion badge
+            const situacion = `<span class="badge bg-info">${record.situacion || 'N/A'}</span>`;
+
+            const ultimaCapacitacion = record.ultima_capacitacion 
+                ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
+                : '-';
+            
+            const proximaCapacitacion = record.proxima_capacitacion 
+                ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
+                : '-';
+
+            const diasRestantes = record.dias_restantes !== null ? record.dias_restantes : '-';
+            let diasDisplay = '-';
+            
+            if (diasRestantes !== '-') {
+                const dias = parseInt(diasRestantes);
+                if (dias < 0) {
+                    diasDisplay = `<span class="text-danger">${Math.abs(dias)} vencidos</span>`;
+                } else {
+                    diasDisplay = `${dias}`;
+                }
+            }
+
+            return `
+                <tr>
+                    <td>${estadoBadge}</td>
+                    <td>${situacion}</td>
+                    <td><small>${record.nombre_completo}</small></td>
+                    <td><small>${record.ac_cedula}</small></td>
+                    <td><small>${record.cargo_nombre}</small></td>
+                    <td><small>${record.sub_area_nombre || '-'}</small></td>
+                    <td><small>${record.tema_nombre}</small></td>
+                    <td class="text-center"><small>${ultimaCapacitacion}</small></td>
+                    <td class="text-center"><small>${proximaCapacitacion}</small></td>
+                    <td class="text-center"><small>${diasDisplay}</small></td>
+                    <td><small><span class="badge bg-info">${record.rol_capacitador_nombre}</span></small></td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('recordCount').textContent = `Total: ${data.length} registros`;
+    }
+
+    function applyFilters() {
+        const estadoFilter = document.getElementById('filterEstado').value;
+        const situacionFilter = document.getElementById('filterSituacion').value;
+        const cargoFilter = document.getElementById('filterCargo').value;
+        const subAreaFilter = document.getElementById('filterSubArea').value;
+        const temaFilter = document.getElementById('filterTema').value;
+        const rolFilter = document.getElementById('filterRol').value;
+
+        let filtered = dashboardData;
+
+        if (estadoFilter) {
+            filtered = filtered.filter(r => r.estado === estadoFilter);
+        }
+
+        if (situacionFilter) {
+            filtered = filtered.filter(r => r.situacion === situacionFilter);
+        }
+
+        if (cargoFilter) {
+            filtered = filtered.filter(r => r.ac_id_cargo === cargoFilter);
+        }
+
+        if (subAreaFilter) {
+            filtered = filtered.filter(r => r.ac_sub_area === subAreaFilter);
+        }
+
+        if (temaFilter) {
+            filtered = filtered.filter(r => r.id_tema == temaFilter);
+        }
+
+        if (rolFilter) {
+            filtered = filtered.filter(r => r.id_rol_capacitador == rolFilter);
+        }
+
+        updateStatistics(filtered);
+        updateTopSummaries(filtered);
+        renderTable(filtered);
+    }
+
+    function clearFilters() {
+        document.getElementById('filterEstado').value = '';
+        document.getElementById('filterSituacion').value = '';
+        document.getElementById('filterCargo').value = '';
+        document.getElementById('filterSubArea').value = '';
+        document.getElementById('filterTema').value = '';
+        document.getElementById('filterRol').value = '';
+        
+        updateStatistics(dashboardData);
+        updateTopSummaries(dashboardData);
+        renderTable(dashboardData);
+    }
+
+    function exportDetailedExcel() {
+        if (dashboardData.length === 0) {
+            alert('No hay datos para exportar');
+            return;
+        }
+
+        // Get currently displayed data
+        const tbody = document.querySelector('#tableDashboard tbody');
+        const rows = tbody.querySelectorAll('tr');
+        
+        // If no data rows, use full dataset
+        const dataToExport = dashboardData;
+
+        const exportData = dataToExport.map(record => ({
+            'Estado': getEstadoText(record.estado),
+            'Colaborador': record.nombre_completo,
+            'Cédula': record.ac_cedula,
+            'Cargo': record.cargo_nombre,
+            'Sub Área': record.sub_area_nombre || '-',
+            'Tema': record.tema_nombre,
+            'Frecuencia (meses)': record.frecuencia_meses,
+            'Última Capacitación': record.ultima_capacitacion 
+                ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
+                : '-',
+            'Próxima Capacitación': record.proxima_capacitacion 
+                ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
+                : '-',
+            'Días Restantes': record.dias_restantes !== null ? record.dias_restantes : '-',
+            'Rol Capacitador': record.rol_capacitador_nombre
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Dashboard Detallado');
+
+        const filename = `Dashboard_Capacitaciones_Detallado_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, filename);
+    }
+
+    function exportSummaryExcel() {
+        if (dashboardData.length === 0) {
+            alert('No hay datos para exportar');
+            return;
+        }
+
+        // Create summary by employee
+        const employeeSummary = {};
+        
+        dashboardData.forEach(record => {
+            const key = record.ac_id;
+            if (!employeeSummary[key]) {
+                employeeSummary[key] = {
+                    nombre: record.nombre_completo,
+                    cedula: record.ac_cedula,
+                    cargo: record.cargo_nombre,
+                    sub_area: record.sub_area_nombre || '-',
+                    al_dia: 0,
+                    pendiente: 0,
+                    proximo_vencer: 0,
+                    vencida: 0
+                };
+            }
+            
+            employeeSummary[key][record.estado] = (employeeSummary[key][record.estado] || 0) + 1;
+        });
+
+        const summaryData = Object.values(employeeSummary).map(emp => ({
+            'Colaborador': emp.nombre,
+            'Cédula': emp.cedula,
+            'Cargo': emp.cargo,
+            'Sub Área': emp.sub_area,
+            'Al Día': emp.al_dia || 0,
+            'Próximas a Vencer': emp.proximo_vencer || 0,
+            'Pendientes': emp.pendiente || 0,
+            'Vencidas': emp.vencida || 0,
+            'Total Capacitaciones': (emp.al_dia || 0) + (emp.pendiente || 0) + (emp.proximo_vencer || 0) + (emp.vencida || 0)
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(summaryData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Resumen por Colaborador');
+
+        const filename = `Dashboard_Capacitaciones_Resumen_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, filename);
+    }
+
+    function getEstadoText(estado) {
+        switch(estado) {
+            case 'al_dia': return 'Al Día';
+            case 'proximo_vencer': return 'Próximo a Vencer';
+            case 'vencida': return 'Vencida';
+            default: return 'Pendiente';
+        }
+    }
+
+    function setupEventListeners() {
+        document.getElementById('btnExportDetailedExcel').addEventListener('click', exportDetailedExcel);
+        document.getElementById('btnExportSummaryExcel').addEventListener('click', exportSummaryExcel);
+        document.getElementById('btnApplyFilters').addEventListener('click', applyFilters);
+        document.getElementById('btnClearFilters').addEventListener('click', clearFilters);
+    }
+
+    function showAlert(message, type) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+        alert.style.zIndex = '9999';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alert);
+        
+        setTimeout(() => alert.remove(), 5000);
+    }
+})();

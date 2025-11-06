@@ -190,6 +190,7 @@ try {
                     t.nombre AS tema_nombre,
                     c.cargo AS cargo_nombre,
                     p.sub_area,
+                    a.sub_area AS sub_area_nombre,
                     r.nombre AS rol_capacitador_nombre,
                     p.fecha_ultima_capacitacion,
                     p.fecha_proxima_capacitacion,
@@ -205,6 +206,7 @@ try {
                 INNER JOIN cap_tema t ON p.id_tema = t.id
                 INNER JOIN adm_cargos c ON p.id_cargo = c.id_cargo
                 INNER JOIN adm_roles r ON p.id_rol_capacitador = r.id
+                LEFT JOIN adm_área a ON p.sub_area = a.id_area
                 WHERE p.id_rol_capacitador IN ($placeholders)
                 AND p.activo = true
                 AND p.fecha_notificacion_previa IS NOT NULL
