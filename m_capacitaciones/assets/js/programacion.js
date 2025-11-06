@@ -290,22 +290,38 @@
             
             // Set sub_area if provided
             if (subAreaParam) {
-                setTimeout(() => {
-                    const subAreaSelect = document.getElementById('inputSubArea');
-                    if (subAreaSelect) {
-                        subAreaSelect.value = decodeURIComponent(subAreaParam);
+                const subAreaSelect = document.getElementById('inputSubArea');
+                if (subAreaSelect) {
+                    const decodedSubArea = decodeURIComponent(subAreaParam);
+                    
+                    // Check if the value exists in the dropdown
+                    let optionExists = false;
+                    for (let i = 0; i < subAreaSelect.options.length; i++) {
+                        if (subAreaSelect.options[i].value === decodedSubArea) {
+                            optionExists = true;
+                            break;
+                        }
                     }
-                }, 100);
+                    
+                    // If the option doesn't exist, add it
+                    if (!optionExists && decodedSubArea) {
+                        const newOption = document.createElement('option');
+                        newOption.value = decodedSubArea;
+                        newOption.textContent = decodedSubArea;
+                        subAreaSelect.appendChild(newOption);
+                    }
+                    
+                    // Set the value
+                    subAreaSelect.value = decodedSubArea;
+                }
             }
             
             // Set cargo if provided
             if (cargoParam) {
-                setTimeout(() => {
-                    const cargoSelect = document.getElementById('inputCargo');
-                    if (cargoSelect) {
-                        cargoSelect.value = cargoParam;
-                    }
-                }, 100);
+                const cargoSelect = document.getElementById('inputCargo');
+                if (cargoSelect) {
+                    cargoSelect.value = cargoParam;
+                }
             }
             
             // Show the modal
