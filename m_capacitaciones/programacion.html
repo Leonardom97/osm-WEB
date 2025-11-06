@@ -88,7 +88,6 @@
                                             <th>Tema</th>
                                             <th>Frecuencia (meses)</th>
                                             <th>Rol Capacitador</th>
-                                            <th>Última Capacitación</th>
                                             <th>Próxima Capacitación</th>
                                             <th>Notificación Previa</th>
                                             <th>Pendientes</th>
@@ -97,7 +96,7 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td colspan="11" class="text-center">
+                                            <td colspan="10" class="text-center">
                                                 <div class="spinner-border" role="status">
                                                     <span class="visually-hidden">Cargando...</span>
                                                 </div>
@@ -166,9 +165,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Fecha Última Capacitación</label>
-                            <input type="date" class="form-control" id="inputFechaUltima">
-                            <small class="form-text text-muted">Registre aquí la fecha de la última capacitación realizada para este cargo/sub-área/tema. Las fechas futuras se calcularán automáticamente.</small>
+                            <label class="form-label">Fecha Próxima Capacitación <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="inputFechaProxima" required>
+                            <small class="form-text text-muted">Fecha programada para la próxima capacitación de este cargo/sub-área/tema.</small>
                         </div>
                     </form>
                 </div>

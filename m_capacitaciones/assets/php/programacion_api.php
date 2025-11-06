@@ -19,15 +19,29 @@ if (!isset($_SESSION['usuario_id'])) {
 try {
     switch ($action) {
         case 'list':
-            // List all training schedules with date columns
-            $stmt = $pg->query("
+            // List training schedules with role-based filtering
+            // Get user's role from session
+            $user_rol = $_SESSION['rol'] ?? '';
+            
+            // Build WHERE clause for role filtering
+            $roleFilter = '';
+            $params = [];
+            
+            // If user is a specific trainer (e.g., Capacitador_TI), filter by their role
+            // Admins and general Capacitador/Aux_Capacitador see all
+            if (!in_array($user_rol, ['Administrador', 'Capacitador', 'Aux_Capacitador'])) {
+                // User is a specific trainer role, filter programaciones
+                $roleFilter = ' AND r.nombre = ?';
+                $params[] = $user_rol;
+            }
+            
+            $sql = "
                 SELECT 
                     p.*,
                     t.nombre AS tema_nombre,
                     c.cargo AS cargo_nombre,
                     r.nombre AS rol_capacitador_nombre,
                     a.sub_area AS sub_area_nombre,
-                    p.fecha_ultima_capacitacion,
                     p.fecha_proxima_capacitacion,
                     p.fecha_notificacion_previa,
                     (
@@ -41,9 +55,17 @@ try {
                 INNER JOIN adm_cargos c ON p.id_cargo = c.id_cargo
                 INNER JOIN adm_roles r ON p.id_rol_capacitador = r.id
                 LEFT JOIN adm_área a ON p.sub_area = a.id_area
-                WHERE p.activo = true
+                WHERE p.activo = true" . $roleFilter . "
                 ORDER BY p.fecha_proxima_capacitacion NULLS LAST, c.cargo, t.nombre
-            ");
+            ";
+            
+            if (!empty($params)) {
+                $stmt = $pg->prepare($sql);
+                $stmt->execute($params);
+            } else {
+                $stmt = $pg->query($sql);
+            }
+            
             $programaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
             jsonResponse(['success' => true, 'data' => $programaciones]);
             break;
@@ -74,33 +96,22 @@ try {
             // Create new training schedule
             $data = json_decode(file_get_contents('php://input'), true);
             
-            $required = ['id_tema', 'id_cargo', 'sub_area', 'frecuencia_meses', 'id_rol_capacitador'];
+            $required = ['id_tema', 'id_cargo', 'sub_area', 'frecuencia_meses', 'id_rol_capacitador', 'fecha_proxima_capacitacion'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '' || (is_string($data[$field]) && trim($data[$field]) === '')) {
                     jsonResponse(['success' => false, 'error' => "Campo requerido: $field"]);
                 }
             }
 
-            // Calculate dates based on fecha_ultima_capacitacion if provided
-            $frecuencia = intval($data['frecuencia_meses']);
-            $fecha_ultima = $data['fecha_ultima_capacitacion'] ?? null;
-            
-            if ($fecha_ultima) {
-                // If last training date is provided, calculate from that date
-                $fecha_proxima = date('Y-m-d', strtotime("$fecha_ultima +{$frecuencia} months"));
-                $fecha_notificacion = date('Y-m-d', strtotime("$fecha_proxima -1 month"));
-            } else {
-                // Otherwise, calculate from today
-                $fecha_ultima = null;
-                $fecha_proxima = date('Y-m-d', strtotime("+{$frecuencia} months"));
-                $fecha_notificacion = date('Y-m-d', strtotime("+{$frecuencia} months -1 month"));
-            }
+            // Use provided fecha_proxima_capacitacion
+            $fecha_proxima = $data['fecha_proxima_capacitacion'];
+            $fecha_notificacion = date('Y-m-d', strtotime("$fecha_proxima -1 month"));
 
             $stmt = $pg->prepare("
                 INSERT INTO cap_programacion 
                 (id_tema, id_cargo, sub_area, frecuencia_meses, id_rol_capacitador, 
-                 fecha_ultima_capacitacion, fecha_proxima_capacitacion, fecha_notificacion_previa, activo)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, true)
+                 fecha_proxima_capacitacion, fecha_notificacion_previa, activo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, true)
                 RETURNING id
             ");
             
@@ -108,9 +119,8 @@ try {
                 $data['id_tema'],
                 $data['id_cargo'],
                 trim($data['sub_area']),
-                $frecuencia,
+                intval($data['frecuencia_meses']),
                 $data['id_rol_capacitador'],
-                $fecha_ultima,
                 $fecha_proxima,
                 $fecha_notificacion
             ]);
@@ -132,7 +142,7 @@ try {
                 jsonResponse(['success' => false, 'error' => 'ID requerido']);
             }
             
-            // Validate required fields including sub_area
+            // Validate required fields including sub_area and fecha_proxima_capacitacion
             $required = ['id_tema', 'id_cargo', 'sub_area', 'frecuencia_meses', 'id_rol_capacitador'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '' || (is_string($data[$field]) && trim($data[$field]) === '')) {
@@ -140,14 +150,13 @@ try {
                 }
             }
 
-            // Check if fecha_ultima_capacitacion was updated
-            $fecha_ultima = $data['fecha_ultima_capacitacion'] ?? null;
+            // Check if fecha_proxima_capacitacion was updated
+            $fecha_proxima = $data['fecha_proxima_capacitacion'] ?? null;
             $frecuencia = intval($data['frecuencia_meses']);
             
-            // Build the update query dynamically
-            if ($fecha_ultima) {
-                // If last training date is provided, recalculate future dates
-                $fecha_proxima = date('Y-m-d', strtotime("$fecha_ultima +{$frecuencia} months"));
+            // Build the update query
+            if ($fecha_proxima) {
+                // If next training date is provided, recalculate notification date
                 $fecha_notificacion = date('Y-m-d', strtotime("$fecha_proxima -1 month"));
                 
                 $stmt = $pg->prepare("
@@ -157,7 +166,6 @@ try {
                         sub_area = ?, 
                         frecuencia_meses = ?, 
                         id_rol_capacitador = ?,
-                        fecha_ultima_capacitacion = ?,
                         fecha_proxima_capacitacion = ?,
                         fecha_notificacion_previa = ?
                     WHERE id = ?
@@ -169,7 +177,6 @@ try {
                     trim($data['sub_area']),
                     $frecuencia,
                     $data['id_rol_capacitador'],
-                    $fecha_ultima,
                     $fecha_proxima,
                     $fecha_notificacion,
                     $id
