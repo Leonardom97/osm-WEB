@@ -372,11 +372,67 @@
             </li>
         `;
 
+        // Calculate page numbers to show (max 7)
+        let startPage = 1;
+        let endPage = totalPages;
+        
+        if (totalPages > 7) {
+            if (currentPage <= 4) {
+                // Near the beginning
+                startPage = 1;
+                endPage = 7;
+            } else if (currentPage >= totalPages - 3) {
+                // Near the end
+                startPage = totalPages - 6;
+                endPage = totalPages;
+            } else {
+                // In the middle
+                startPage = currentPage - 3;
+                endPage = currentPage + 3;
+            }
+        }
+
+        // First page button if not in range
+        if (startPage > 1) {
+            paginationHTML += `
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="changePage(1); return false;">1</a>
+                </li>
+            `;
+            
+            // Add ellipsis if there's a gap
+            if (startPage > 2) {
+                paginationHTML += `
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                `;
+            }
+        }
+
         // Page numbers
-        for (let i = 1; i <= totalPages; i++) {
+        for (let i = startPage; i <= endPage; i++) {
             paginationHTML += `
                 <li class="page-item ${i === currentPage ? 'active' : ''}">
                     <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                </li>
+            `;
+        }
+
+        // Last page button if not in range
+        if (endPage < totalPages) {
+            // Add ellipsis if there's a gap
+            if (endPage < totalPages - 1) {
+                paginationHTML += `
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                `;
+            }
+            
+            paginationHTML += `
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a>
                 </li>
             `;
         }
