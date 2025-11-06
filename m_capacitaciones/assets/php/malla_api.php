@@ -54,14 +54,16 @@ try {
                 ),
                 ultima_capacitacion_colaborador AS (
                     -- Get the most recent training completion date for each employee+tema
+                    -- Handle both id_colaborador (new records) and cedula-based matching (legacy records)
                     SELECT 
-                        fa.id_colaborador,
+                        COALESCE(fa.id_colaborador, c.ac_id) AS id_colaborador,
                         f.id_tema,
                         MAX(f.fecha) AS ultima_fecha_ejecutada
                     FROM cap_formulario_asistente fa
                     INNER JOIN cap_formulario f ON fa.id_formulario = f.id
+                    LEFT JOIN adm_colaboradores c ON fa.cedula = c.ac_cedula AND fa.id_colaborador IS NULL
                     WHERE fa.estado_aprovacion = 'aprobo'
-                    GROUP BY fa.id_colaborador, f.id_tema
+                    GROUP BY COALESCE(fa.id_colaborador, c.ac_id), f.id_tema
                 )
                 SELECT 
                     cp.*,
@@ -135,14 +137,16 @@ try {
                     AND p.activo = true
                 ),
                 ultima_capacitacion_colaborador AS (
+                    -- Handle both id_colaborador (new records) and cedula-based matching (legacy records)
                     SELECT 
-                        fa.id_colaborador,
+                        COALESCE(fa.id_colaborador, c.ac_id) AS id_colaborador,
                         f.id_tema,
                         MAX(f.fecha) AS ultima_fecha_ejecutada
                     FROM cap_formulario_asistente fa
                     INNER JOIN cap_formulario f ON fa.id_formulario = f.id
+                    LEFT JOIN adm_colaboradores c ON fa.cedula = c.ac_cedula AND fa.id_colaborador IS NULL
                     WHERE fa.estado_aprovacion = 'aprobo'
-                    GROUP BY fa.id_colaborador, f.id_tema
+                    GROUP BY COALESCE(fa.id_colaborador, c.ac_id), f.id_tema
                 ),
                 estados AS (
                     SELECT 
@@ -182,7 +186,7 @@ try {
 
             $stmt = $pg->prepare("
                 WITH colaborador_info AS (
-                    SELECT ac_id, ac_id_cargo, ac_sub_area
+                    SELECT ac_id, ac_id_cargo, ac_sub_area, ac_cedula
                     FROM adm_colaboradores
                     WHERE ac_cedula = ? AND ac_id_situación IN ('A', 'V', 'P')
                     LIMIT 1
@@ -203,12 +207,13 @@ try {
                     WHERE p.activo = true
                 ),
                 ultimas_capacitaciones AS (
+                    -- Handle both id_colaborador (new records) and cedula-based matching (legacy records)
                     SELECT 
                         f.id_tema,
                         MAX(f.fecha) AS ultima_fecha
                     FROM cap_formulario_asistente fa
                     INNER JOIN cap_formulario f ON fa.id_formulario = f.id
-                    INNER JOIN colaborador_info ci ON fa.id_colaborador = ci.ac_id
+                    INNER JOIN colaborador_info ci ON (fa.id_colaborador = ci.ac_id OR fa.cedula = ci.ac_cedula)
                     WHERE fa.estado_aprovacion = 'aprobo'
                     GROUP BY f.id_tema
                 )
