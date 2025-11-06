@@ -82,7 +82,20 @@
                 renderTable(dashboardData);
             } else {
                 console.error('Data loading failed:', dataResult.error);
-                showAlert('Error al cargar datos: ' + (dataResult.error || 'Error desconocido'), 'danger');
+                const errorMsg = dataResult.error || 'Error desconocido';
+                
+                // Check for authentication error
+                if (errorMsg.includes('autorizado') || errorMsg.includes('sesión')) {
+                    showAlert('Su sesión ha expirado. Por favor, inicie sesión nuevamente.', 'danger');
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 2000);
+                } else {
+                    showAlert('Error al cargar datos: ' + errorMsg, 'danger');
+                }
+                
+                // Show empty state
+                renderTable([]);
             }
 
             if (filtersResult.success) {
