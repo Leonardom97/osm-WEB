@@ -445,9 +445,12 @@
 
         // Include fecha_proxima_capacitacion (required)
         const fechaProxima = document.getElementById('inputFechaProxima').value;
-        if (fechaProxima) {
-            data.fecha_proxima_capacitacion = fechaProxima;
+        if (!fechaProxima) {
+            alert('La fecha próxima de capacitación es obligatoria');
+            document.getElementById('inputFechaProxima').focus();
+            return;
         }
+        data.fecha_proxima_capacitacion = fechaProxima;
 
         if (editingId) {
             data.id = editingId;

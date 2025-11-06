@@ -4,6 +4,14 @@ require '../../../php/db_postgres.php';
 
 header('Content-Type: application/json');
 
+// Define role constants for consistency
+define('ADMIN_ROLES', ['Administrador', 'Capacitador', 'Aux_Capacitador']);
+define('TRAINER_ROLES', [
+    'Capacitador_SIE', 'Capacitador_GH', 'Capacitador_TI', 
+    'Capacitador_MT', 'Capacitador_ADM', 'Capacitador_IND', 
+    'Capacitador_AGR'
+]);
+
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 function jsonResponse($data) {
@@ -27,9 +35,9 @@ try {
             $roleFilter = '';
             $params = [];
             
-            // If user is a specific trainer (e.g., Capacitador_TI), filter by their role
-            // Admins and general Capacitador/Aux_Capacitador see all
-            if (!in_array($user_rol, ['Administrador', 'Capacitador', 'Aux_Capacitador'])) {
+            // If user is a specific trainer, filter by their role
+            // Admins and general coordinators see all
+            if (!in_array($user_rol, ADMIN_ROLES)) {
                 // User is a specific trainer role, filter programaciones
                 $roleFilter = ' AND r.nombre = ?';
                 $params[] = $user_rol;
@@ -143,65 +151,42 @@ try {
             }
             
             // Validate required fields including sub_area and fecha_proxima_capacitacion
-            $required = ['id_tema', 'id_cargo', 'sub_area', 'frecuencia_meses', 'id_rol_capacitador'];
+            $required = ['id_tema', 'id_cargo', 'sub_area', 'frecuencia_meses', 'id_rol_capacitador', 'fecha_proxima_capacitacion'];
             foreach ($required as $field) {
                 if (!isset($data[$field]) || $data[$field] === '' || (is_string($data[$field]) && trim($data[$field]) === '')) {
                     jsonResponse(['success' => false, 'error' => "Campo requerido: $field"]);
                 }
             }
 
-            // Check if fecha_proxima_capacitacion was updated
-            $fecha_proxima = $data['fecha_proxima_capacitacion'] ?? null;
+            // Get fecha_proxima_capacitacion (now required)
+            $fecha_proxima = $data['fecha_proxima_capacitacion'];
             $frecuencia = intval($data['frecuencia_meses']);
             
-            // Build the update query
-            if ($fecha_proxima) {
-                // If next training date is provided, recalculate notification date
-                $fecha_notificacion = date('Y-m-d', strtotime("$fecha_proxima -1 month"));
-                
-                $stmt = $pg->prepare("
-                    UPDATE cap_programacion 
-                    SET id_tema = ?, 
-                        id_cargo = ?, 
-                        sub_area = ?, 
-                        frecuencia_meses = ?, 
-                        id_rol_capacitador = ?,
-                        fecha_proxima_capacitacion = ?,
-                        fecha_notificacion_previa = ?
-                    WHERE id = ?
-                ");
-                
-                $stmt->execute([
-                    $data['id_tema'],
-                    $data['id_cargo'],
-                    trim($data['sub_area']),
-                    $frecuencia,
-                    $data['id_rol_capacitador'],
-                    $fecha_proxima,
-                    $fecha_notificacion,
-                    $id
-                ]);
-            } else {
-                // Just update basic fields, keep existing dates
-                $stmt = $pg->prepare("
-                    UPDATE cap_programacion 
-                    SET id_tema = ?, 
-                        id_cargo = ?, 
-                        sub_area = ?, 
-                        frecuencia_meses = ?, 
-                        id_rol_capacitador = ?
-                    WHERE id = ?
-                ");
-                
-                $stmt->execute([
-                    $data['id_tema'],
-                    $data['id_cargo'],
-                    trim($data['sub_area']),
-                    $frecuencia,
-                    $data['id_rol_capacitador'],
-                    $id
-                ]);
-            }
+            // Recalculate notification date (fecha_proxima is now required)
+            $fecha_notificacion = date('Y-m-d', strtotime("$fecha_proxima -1 month"));
+            
+            $stmt = $pg->prepare("
+                UPDATE cap_programacion 
+                SET id_tema = ?, 
+                    id_cargo = ?, 
+                    sub_area = ?, 
+                    frecuencia_meses = ?, 
+                    id_rol_capacitador = ?,
+                    fecha_proxima_capacitacion = ?,
+                    fecha_notificacion_previa = ?
+                WHERE id = ?
+            ");
+            
+            $stmt->execute([
+                $data['id_tema'],
+                $data['id_cargo'],
+                trim($data['sub_area']),
+                $frecuencia,
+                $data['id_rol_capacitador'],
+                $fecha_proxima,
+                $fecha_notificacion,
+                $id
+            ]);
             
             // Update notifications
             $pg->query("SELECT actualizar_notificaciones_capacitacion()");
