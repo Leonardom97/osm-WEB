@@ -195,7 +195,7 @@ try {
                     p.fecha_ultima_capacitacion,
                     p.fecha_proxima_capacitacion,
                     p.fecha_notificacion_previa,
-                    EXTRACT(DAY FROM (p.fecha_proxima_capacitacion - CURRENT_DATE))::int AS dias_para_proxima,
+                    (p.fecha_proxima_capacitacion - CURRENT_DATE)::int AS dias_para_proxima,
                     (
                         SELECT COUNT(DISTINCT n.id_colaborador)
                         FROM cap_notificaciones n
