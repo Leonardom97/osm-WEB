@@ -366,7 +366,7 @@
         // Previous button
         paginationHTML += `
             <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;" aria-label="Anterior">
+                <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="Anterior">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </li>
@@ -396,7 +396,7 @@
         if (startPage > 1) {
             paginationHTML += `
                 <li class="page-item">
-                    <a class="page-link" href="#" onclick="changePage(1); return false;">1</a>
+                    <a class="page-link" href="#" data-page="1">1</a>
                 </li>
             `;
             
@@ -404,7 +404,7 @@
             if (startPage > 2) {
                 paginationHTML += `
                     <li class="page-item disabled">
-                        <a class="page-link" href="#">...</a>
+                        <span class="page-link">...</span>
                     </li>
                 `;
             }
@@ -414,7 +414,7 @@
         for (let i = startPage; i <= endPage; i++) {
             paginationHTML += `
                 <li class="page-item ${i === currentPage ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
                 </li>
             `;
         }
@@ -425,14 +425,14 @@
             if (endPage < totalPages - 1) {
                 paginationHTML += `
                     <li class="page-item disabled">
-                        <a class="page-link" href="#">...</a>
+                        <span class="page-link">...</span>
                     </li>
                 `;
             }
             
             paginationHTML += `
                 <li class="page-item">
-                    <a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a>
+                    <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
                 </li>
             `;
         }
@@ -440,7 +440,7 @@
         // Next button
         paginationHTML += `
             <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;" aria-label="Siguiente">
+                <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="Siguiente">
                     <span aria-hidden="true">&raquo;</span>
                 </a>
             </li>
@@ -449,19 +449,19 @@
         paginationContainer.innerHTML = paginationHTML;
     }
 
-    window.changePage = function(page) {
+    function changePage(page) {
         const totalPages = Math.ceil(currentFilteredData.length / recordsPerPage);
         if (page >= 1 && page <= totalPages) {
             currentPage = page;
             renderTable(currentFilteredData);
         }
-    };
+    }
 
-    window.changeRecordsPerPage = function(value) {
+    function changeRecordsPerPage(value) {
         recordsPerPage = parseInt(value);
         currentPage = 1;
         renderTable(currentFilteredData);
-    };
+    }
 
     function applyFilters() {
         console.log('Applying filters...');
@@ -663,6 +663,16 @@
         document.getElementById('btnClearFilters').addEventListener('click', clearFilters);
         document.getElementById('recordsPerPage').addEventListener('change', function(e) {
             changeRecordsPerPage(e.target.value);
+        });
+        
+        // Event delegation for pagination links
+        document.getElementById('tablePagination').addEventListener('click', function(e) {
+            e.preventDefault();
+            const link = e.target.closest('.page-link');
+            if (link && link.hasAttribute('data-page')) {
+                const page = parseInt(link.getAttribute('data-page'));
+                changePage(page);
+            }
         });
     }
 
