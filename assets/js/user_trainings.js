@@ -708,7 +708,8 @@
 
     async function loadPendingTrainings() {
         try {
-            const res = await fetch('/m_capacitaciones/assets/php/progreso_api.php?action=get_pending_trainings', {
+            // Get user's cedula from session or page data
+            const res = await fetch('/m_capacitaciones/assets/php/malla_api.php?action=get_user_pending_trainings', {
                 cache: 'no-store'
             });
             const result = await res.json();
@@ -717,37 +718,54 @@
             if (!container) return;
 
             if (result.success && result.data && result.data.length > 0) {
-                container.innerHTML = `
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Tema</th>
-                                    <th>Fecha Próxima</th>
-                                    <th>Estado</th>
-                                    <th>Responsable</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${result.data.map(training => {
-                                    const badgeClass = training.estado === 'vencida' ? 'bg-danger' : 
-                                                      training.estado === 'proximo_vencer' ? 'bg-warning' : 'bg-info';
-                                    const estadoText = training.estado === 'vencida' ? 'Vencida' : 
-                                                      training.estado === 'proximo_vencer' ? 'Próxima a vencer' : 'Pendiente';
-                                    
-                                    return `
-                                        <tr>
-                                            <td>${training.tema}</td>
-                                            <td>${formatDate(training.fecha_proxima)}</td>
-                                            <td><span class="badge ${badgeClass}">${estadoText}</span></td>
-                                            <td><small>${training.responsable}</small></td>
-                                        </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+                // Filter to show only pending or overdue trainings
+                const pendingData = result.data.filter(t => t.estado === 'pendiente' || t.estado === 'vencida' || t.estado === 'proximo_vencer');
+                
+                if (pendingData.length > 0) {
+                    container.innerHTML = `
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tema</th>
+                                        <th>Última Capacitación</th>
+                                        <th>Próxima Capacitación</th>
+                                        <th>Estado</th>
+                                        <th>Responsable</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${pendingData.map(training => {
+                                        const badgeClass = training.estado === 'vencida' ? 'bg-danger' : 
+                                                          training.estado === 'proximo_vencer' ? 'bg-warning text-dark' : 'bg-secondary';
+                                        const estadoText = training.estado === 'vencida' ? 'Vencida' : 
+                                                          training.estado === 'proximo_vencer' ? 'Próxima a vencer' : 'Pendiente';
+                                        
+                                        const ultimaCap = training.ultima_capacitacion ? formatDate(training.ultima_capacitacion) : 'Sin registro';
+                                        const proximaCap = training.proxima_capacitacion ? formatDate(training.proxima_capacitacion) : '-';
+                                        
+                                        return `
+                                            <tr>
+                                                <td><strong>${training.tema_nombre}</strong></td>
+                                                <td><small>${ultimaCap}</small></td>
+                                                <td><small>${proximaCap}</small></td>
+                                                <td><span class="badge ${badgeClass}">${estadoText}</span></td>
+                                                <td><small>${training.rol_capacitador_nombre}</small></td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <p class="mb-0">No hay capacitaciones pendientes</p>
+                        </div>
+                    `;
+                }
             } else {
                 container.innerHTML = `
                     <div class="text-center text-muted py-3">
@@ -767,7 +785,7 @@
 
     async function loadScheduledTrainings() {
         try {
-            const res = await fetch('/m_capacitaciones/assets/php/progreso_api.php?action=get_scheduled_trainings', {
+            const res = await fetch('/m_capacitaciones/assets/php/malla_api.php?action=get_user_pending_trainings', {
                 cache: 'no-store'
             });
             const result = await res.json();
@@ -776,6 +794,7 @@
             if (!container) return;
 
             if (result.success && result.data && result.data.length > 0) {
+                // Show all trainings with their schedules
                 container.innerHTML = `
                     <div class="table-responsive">
                         <table class="table table-sm">
@@ -793,19 +812,24 @@
                                 ${result.data.map(training => {
                                     const estadoText = training.estado === 'vencida' ? 'Vencida' : 
                                                       training.estado === 'proximo_vencer' ? 'Próxima a vencer' : 
-                                                      training.estado === 'vigente' ? 'Vigente' : 'Pendiente';
+                                                      training.estado === 'al_dia' ? 'Al Día' : 'Pendiente';
+                                    const badgeClass = training.estado === 'vencida' ? 'bg-danger' : 
+                                                      training.estado === 'proximo_vencer' ? 'bg-warning text-dark' : 
+                                                      training.estado === 'al_dia' ? 'bg-success' : 'bg-secondary';
+                                    
+                                    const ultimaCap = training.ultima_capacitacion ? formatDate(training.ultima_capacitacion) : 'Sin registro';
+                                    const proximaCap = training.proxima_capacitacion ? formatDate(training.proxima_capacitacion) : '-';
                                     
                                     return `
                                         <tr>
                                             <td>
-                                                <strong>${training.tema}</strong>
-                                                ${training.sub_area ? `<br><small class="text-muted">${training.sub_area}</small>` : ''}
+                                                <strong>${training.tema_nombre}</strong>
                                             </td>
-                                            <td>${training.fecha_ultima_capacitacion ? formatDate(training.fecha_ultima_capacitacion) : 'Sin registro'}</td>
-                                            <td>${formatDate(training.fecha_proxima)}</td>
-                                            <td>Cada ${training.frecuencia_meses} mes${training.frecuencia_meses > 1 ? 'es' : ''}</td>
-                                            <td><span class="badge bg-${training.badge_class}">${estadoText}</span></td>
-                                            <td><small>${training.responsable}</small></td>
+                                            <td><small>${ultimaCap}</small></td>
+                                            <td><small>${proximaCap}</small></td>
+                                            <td><small>Cada ${training.frecuencia_meses} mes${training.frecuencia_meses > 1 ? 'es' : ''}</small></td>
+                                            <td><span class="badge ${badgeClass}">${estadoText}</span></td>
+                                            <td><small>${training.rol_capacitador_nombre}</small></td>
                                         </tr>
                                     `;
                                 }).join('')}
