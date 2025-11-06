@@ -36,6 +36,9 @@
             
             await loadData();
             setupEventListeners();
+            
+            // Check for URL parameters to auto-open modal with pre-selected values
+            checkUrlParameters();
         } catch (error) {
             console.error('Error initializing page:', error);
             showAlert('Error al cargar la página', 'danger');
@@ -272,6 +275,86 @@
         }).join('');
     }
 
+    function checkUrlParameters() {
+        // Check if there are URL parameters for auto-opening the modal
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const subAreaParam = urlParams.get('sub_area');
+            const cargoParam = urlParams.get('cargo');
+            
+            if (subAreaParam || cargoParam) {
+                // Reset modal state
+                editingId = null;
+                const modalTitle = document.getElementById('modalTitle');
+                const form = document.getElementById('formProgramacion');
+                const programacionId = document.getElementById('programacionId');
+                
+                if (!modalTitle || !form || !programacionId) {
+                    console.error('Modal elements not found');
+                    return;
+                }
+                
+                modalTitle.textContent = 'Nueva Programación';
+                form.reset();
+                programacionId.value = '';
+                
+                // Set sub_area if provided
+                if (subAreaParam) {
+                    const subAreaSelect = document.getElementById('inputSubArea');
+                    if (subAreaSelect) {
+                        const decodedSubArea = decodeURIComponent(subAreaParam);
+                        ensureOptionExists(subAreaSelect, decodedSubArea);
+                        subAreaSelect.value = decodedSubArea;
+                    }
+                }
+                
+                // Set cargo if provided (note: cargo uses ID, not name)
+                if (cargoParam) {
+                    const cargoSelect = document.getElementById('inputCargo');
+                    if (cargoSelect) {
+                        cargoSelect.value = cargoParam;
+                    }
+                }
+                
+                // Show the modal
+                const modalElement = document.getElementById('modalProgramacion');
+                if (modalElement) {
+                    new bootstrap.Modal(modalElement).show();
+                }
+                
+                // Clean the URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        } catch (error) {
+            console.error('Error processing URL parameters:', error);
+        }
+    }
+
+    function ensureOptionExists(selectElement, value) {
+        // Helper function to ensure a value exists in a select dropdown
+        // Adds the option if it doesn't exist
+        if (!selectElement || !value) return false;
+        
+        // Check if the value exists in the options
+        let optionExists = false;
+        for (let i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].value === value) {
+                optionExists = true;
+                break;
+            }
+        }
+        
+        // If the option doesn't exist, add it
+        if (!optionExists) {
+            const newOption = document.createElement('option');
+            newOption.value = value;
+            newOption.textContent = value;
+            selectElement.appendChild(newOption);
+        }
+        
+        return true;
+    }
+
     function setupEventListeners() {
         // New programming button
         document.getElementById('btnNuevaProgramacion').addEventListener('click', function() {
@@ -403,10 +486,18 @@
                 document.getElementById('modalTitle').textContent = 'Editar Programación';
                 document.getElementById('programacionId').value = id;
                 document.getElementById('inputCargo').value = prog.id_cargo;
-                document.getElementById('inputSubArea').value = prog.sub_area || '';
                 document.getElementById('inputTema').value = prog.id_tema;
                 document.getElementById('inputFrecuencia').value = prog.frecuencia_meses;
                 document.getElementById('inputRolCapacitador').value = prog.id_rol_capacitador;
+                
+                // Set sub_area - ensure the value exists in the dropdown first
+                const subAreaSelect = document.getElementById('inputSubArea');
+                const currentSubArea = prog.sub_area || '';
+                
+                if (subAreaSelect && currentSubArea) {
+                    ensureOptionExists(subAreaSelect, currentSubArea);
+                    subAreaSelect.value = currentSubArea;
+                }
 
                 new bootstrap.Modal(document.getElementById('modalProgramacion')).show();
             }
