@@ -277,59 +277,82 @@
 
     function checkUrlParameters() {
         // Check if there are URL parameters for auto-opening the modal
-        const urlParams = new URLSearchParams(window.location.search);
-        const subAreaParam = urlParams.get('sub_area');
-        const cargoParam = urlParams.get('cargo');
-        
-        if (subAreaParam || cargoParam) {
-            // Open the modal
-            editingId = null;
-            document.getElementById('modalTitle').textContent = 'Nueva Programación';
-            document.getElementById('formProgramacion').reset();
-            document.getElementById('programacionId').value = '';
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const subAreaParam = urlParams.get('sub_area');
+            const cargoParam = urlParams.get('cargo');
             
-            // Set sub_area if provided
-            if (subAreaParam) {
-                const subAreaSelect = document.getElementById('inputSubArea');
-                if (subAreaSelect) {
-                    const decodedSubArea = decodeURIComponent(subAreaParam);
-                    
-                    // Check if the value exists in the dropdown
-                    let optionExists = false;
-                    for (let i = 0; i < subAreaSelect.options.length; i++) {
-                        if (subAreaSelect.options[i].value === decodedSubArea) {
-                            optionExists = true;
-                            break;
-                        }
-                    }
-                    
-                    // If the option doesn't exist, add it
-                    if (!optionExists && decodedSubArea) {
-                        const newOption = document.createElement('option');
-                        newOption.value = decodedSubArea;
-                        newOption.textContent = decodedSubArea;
-                        subAreaSelect.appendChild(newOption);
-                    }
-                    
-                    // Set the value
-                    subAreaSelect.value = decodedSubArea;
+            if (subAreaParam || cargoParam) {
+                // Reset modal state
+                editingId = null;
+                const modalTitle = document.getElementById('modalTitle');
+                const form = document.getElementById('formProgramacion');
+                const programacionId = document.getElementById('programacionId');
+                
+                if (!modalTitle || !form || !programacionId) {
+                    console.error('Modal elements not found');
+                    return;
                 }
-            }
-            
-            // Set cargo if provided
-            if (cargoParam) {
-                const cargoSelect = document.getElementById('inputCargo');
-                if (cargoSelect) {
-                    cargoSelect.value = cargoParam;
+                
+                modalTitle.textContent = 'Nueva Programación';
+                form.reset();
+                programacionId.value = '';
+                
+                // Set sub_area if provided
+                if (subAreaParam) {
+                    const subAreaSelect = document.getElementById('inputSubArea');
+                    if (subAreaSelect) {
+                        const decodedSubArea = decodeURIComponent(subAreaParam);
+                        ensureOptionExists(subAreaSelect, decodedSubArea);
+                        subAreaSelect.value = decodedSubArea;
+                    }
                 }
+                
+                // Set cargo if provided (note: cargo uses ID, not name)
+                if (cargoParam) {
+                    const cargoSelect = document.getElementById('inputCargo');
+                    if (cargoSelect) {
+                        cargoSelect.value = cargoParam;
+                    }
+                }
+                
+                // Show the modal
+                const modalElement = document.getElementById('modalProgramacion');
+                if (modalElement) {
+                    new bootstrap.Modal(modalElement).show();
+                }
+                
+                // Clean the URL
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
-            
-            // Show the modal
-            new bootstrap.Modal(document.getElementById('modalProgramacion')).show();
-            
-            // Clean the URL
-            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+            console.error('Error processing URL parameters:', error);
         }
+    }
+
+    function ensureOptionExists(selectElement, value) {
+        // Helper function to ensure a value exists in a select dropdown
+        // Adds the option if it doesn't exist
+        if (!selectElement || !value) return false;
+        
+        // Check if the value exists in the options
+        let optionExists = false;
+        for (let i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].value === value) {
+                optionExists = true;
+                break;
+            }
+        }
+        
+        // If the option doesn't exist, add it
+        if (!optionExists) {
+            const newOption = document.createElement('option');
+            newOption.value = value;
+            newOption.textContent = value;
+            selectElement.appendChild(newOption);
+        }
+        
+        return true;
     }
 
     function setupEventListeners() {
@@ -471,25 +494,10 @@
                 const subAreaSelect = document.getElementById('inputSubArea');
                 const currentSubArea = prog.sub_area || '';
                 
-                // Check if the current sub_area exists in the options
-                let optionExists = false;
-                for (let i = 0; i < subAreaSelect.options.length; i++) {
-                    if (subAreaSelect.options[i].value === currentSubArea) {
-                        optionExists = true;
-                        break;
-                    }
+                if (subAreaSelect && currentSubArea) {
+                    ensureOptionExists(subAreaSelect, currentSubArea);
+                    subAreaSelect.value = currentSubArea;
                 }
-                
-                // If the option doesn't exist and we have a value, add it
-                if (!optionExists && currentSubArea) {
-                    const newOption = document.createElement('option');
-                    newOption.value = currentSubArea;
-                    newOption.textContent = currentSubArea;
-                    subAreaSelect.appendChild(newOption);
-                }
-                
-                // Now set the value
-                subAreaSelect.value = currentSubArea;
 
                 new bootstrap.Modal(document.getElementById('modalProgramacion')).show();
             }
