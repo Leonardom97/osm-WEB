@@ -101,90 +101,114 @@
     }
 
     function updateStatistics(data) {
-        // Get unique employees
-        const uniqueEmployees = [...new Set(data.map(r => r.ac_id))];
-        
-        // Count trainings by status
-        const alDiaCount = data.filter(r => r.estado === 'al_dia').length;
-        const pendientesCount = data.filter(r => r.estado === 'pendiente' || r.estado === 'proximo_vencer').length;
-        const vencidasCount = data.filter(r => r.estado === 'vencida').length;
-        
-        document.getElementById('statTotalColaboradores').textContent = uniqueEmployees.length;
-        document.getElementById('statCapacitados').textContent = alDiaCount;
-        document.getElementById('statPendientes').textContent = pendientesCount;
-        document.getElementById('statVencidas').textContent = vencidasCount;
+        try {
+            // Get unique employees
+            const uniqueEmployees = [...new Set(data.map(r => r.ac_id).filter(id => id))];
+            
+            // Count trainings by status
+            const alDiaCount = data.filter(r => r.estado === 'al_dia').length;
+            const pendientesCount = data.filter(r => r.estado === 'pendiente' || r.estado === 'proximo_vencer').length;
+            const vencidasCount = data.filter(r => r.estado === 'vencida').length;
+            
+            console.log('Statistics:', {
+                uniqueEmployees: uniqueEmployees.length,
+                alDiaCount,
+                pendientesCount,
+                vencidasCount,
+                totalRecords: data.length
+            });
+            
+            document.getElementById('statTotalColaboradores').textContent = uniqueEmployees.length;
+            document.getElementById('statCapacitados').textContent = alDiaCount;
+            document.getElementById('statPendientes').textContent = pendientesCount;
+            document.getElementById('statVencidas').textContent = vencidasCount;
+        } catch (error) {
+            console.error('Error updating statistics:', error);
+        }
     }
 
     function updateTopSummaries(data) {
-        // Top cargos with pending trainings
-        const pendingData = data.filter(r => r.estado === 'pendiente' || r.estado === 'vencida');
-        const cargoCount = {};
-        
-        pendingData.forEach(r => {
-            cargoCount[r.cargo_nombre] = (cargoCount[r.cargo_nombre] || 0) + 1;
-        });
-        
-        const topCargos = Object.entries(cargoCount)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 10);
-        
-        const cargosContainer = document.getElementById('topCargosPendientes');
-        if (topCargos.length > 0) {
-            cargosContainer.innerHTML = `
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Cargo</th>
-                            <th class="text-end">Pendientes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${topCargos.map(([cargo, count]) => `
+        try {
+            // Top cargos with pending trainings (includes pendiente, vencida, and proximo_vencer)
+            const pendingData = data.filter(r => r.estado === 'pendiente' || r.estado === 'vencida' || r.estado === 'proximo_vencer');
+            const cargoCount = {};
+            
+            pendingData.forEach(r => {
+                if (r.cargo_nombre) {
+                    cargoCount[r.cargo_nombre] = (cargoCount[r.cargo_nombre] || 0) + 1;
+                }
+            });
+            
+            const topCargos = Object.entries(cargoCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            console.log('Top cargos with pending trainings:', topCargos);
+            
+            const cargosContainer = document.getElementById('topCargosPendientes');
+            if (topCargos.length > 0) {
+                cargosContainer.innerHTML = `
+                    <table class="table table-sm">
+                        <thead>
                             <tr>
-                                <td>${cargo}</td>
-                                <td class="text-end"><span class="badge bg-warning text-dark">${count}</span></td>
+                                <th>Cargo</th>
+                                <th class="text-end">Pendientes</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        } else {
-            cargosContainer.innerHTML = '<p class="text-muted text-center">No hay pendientes</p>';
-        }
-        
-        // Top temas with pending trainings
-        const temaCount = {};
-        
-        pendingData.forEach(r => {
-            temaCount[r.tema_nombre] = (temaCount[r.tema_nombre] || 0) + 1;
-        });
-        
-        const topTemas = Object.entries(temaCount)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 10);
-        
-        const temasContainer = document.getElementById('topTemasPendientes');
-        if (topTemas.length > 0) {
-            temasContainer.innerHTML = `
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Tema</th>
-                            <th class="text-end">Pendientes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${topTemas.map(([tema, count]) => `
+                        </thead>
+                        <tbody>
+                            ${topCargos.map(([cargo, count]) => `
+                                <tr>
+                                    <td>${cargo}</td>
+                                    <td class="text-end"><span class="badge bg-warning text-dark">${count}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                cargosContainer.innerHTML = '<p class="text-muted text-center py-3"><i class="fas fa-check-circle"></i> No hay capacitaciones pendientes</p>';
+            }
+            
+            // Top temas with pending trainings
+            const temaCount = {};
+            
+            pendingData.forEach(r => {
+                if (r.tema_nombre) {
+                    temaCount[r.tema_nombre] = (temaCount[r.tema_nombre] || 0) + 1;
+                }
+            });
+            
+            const topTemas = Object.entries(temaCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            console.log('Top temas with pending trainings:', topTemas);
+            
+            const temasContainer = document.getElementById('topTemasPendientes');
+            if (topTemas.length > 0) {
+                temasContainer.innerHTML = `
+                    <table class="table table-sm">
+                        <thead>
                             <tr>
-                                <td>${tema}</td>
-                                <td class="text-end"><span class="badge bg-warning text-dark">${count}</span></td>
+                                <th>Tema</th>
+                                <th class="text-end">Pendientes</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        } else {
-            temasContainer.innerHTML = '<p class="text-muted text-center">No hay pendientes</p>';
+                        </thead>
+                        <tbody>
+                            ${topTemas.map(([tema, count]) => `
+                                <tr>
+                                    <td>${tema}</td>
+                                    <td class="text-end"><span class="badge bg-warning text-dark">${count}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                temasContainer.innerHTML = '<p class="text-muted text-center py-3"><i class="fas fa-check-circle"></i> No hay capacitaciones pendientes</p>';
+            }
+        } catch (error) {
+            console.error('Error updating top summaries:', error);
         }
     }
 
@@ -226,28 +250,34 @@
     function renderTable(data) {
         const tbody = document.querySelector('#tableDashboard tbody');
 
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center">No hay registros</td></tr>';
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center py-4"><i class="fas fa-info-circle"></i> No hay registros para mostrar</td></tr>';
             document.getElementById('recordCount').textContent = 'Total: 0 registros';
             return;
         }
 
+        console.log(`Rendering ${data.length} records in table`);
+
         tbody.innerHTML = data.map(record => {
             const estado = record.estado || 'pendiente';
             let estadoBadge = '';
+            let rowClass = '';
             
             switch(estado) {
                 case 'al_dia':
                     estadoBadge = '<span class="badge bg-success">Al Día</span>';
                     break;
                 case 'proximo_vencer':
-                    estadoBadge = '<span class="badge bg-warning text-dark">Próximo</span>';
+                    estadoBadge = '<span class="badge bg-warning text-dark">Próximo a Vencer</span>';
+                    rowClass = 'table-warning';
                     break;
                 case 'vencida':
                     estadoBadge = '<span class="badge bg-danger">Vencida</span>';
+                    rowClass = 'table-danger';
                     break;
                 default:
                     estadoBadge = '<span class="badge bg-secondary">Pendiente</span>';
+                    rowClass = 'table-light';
             }
 
             // Get situacion badge
@@ -255,11 +285,11 @@
 
             const ultimaCapacitacion = record.ultima_capacitacion 
                 ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
-                : '-';
+                : '<span class="text-muted">Sin registro</span>';
             
             const proximaCapacitacion = record.proxima_capacitacion 
                 ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
-                : '-';
+                : '<span class="text-muted">-</span>';
 
             const diasRestantes = record.dias_restantes !== null ? record.dias_restantes : '-';
             let diasDisplay = '-';
@@ -267,25 +297,27 @@
             if (diasRestantes !== '-') {
                 const dias = parseInt(diasRestantes);
                 if (dias < 0) {
-                    diasDisplay = `<span class="text-danger">${Math.abs(dias)} vencidos</span>`;
+                    diasDisplay = `<span class="text-danger fw-bold">${Math.abs(dias)} días vencidos</span>`;
+                } else if (dias <= 30) {
+                    diasDisplay = `<span class="text-warning fw-bold">${dias} días</span>`;
                 } else {
-                    diasDisplay = `${dias}`;
+                    diasDisplay = `<span class="text-success">${dias} días</span>`;
                 }
             }
 
             return `
-                <tr>
+                <tr class="${rowClass}">
                     <td>${estadoBadge}</td>
                     <td>${situacion}</td>
-                    <td><small>${record.nombre_completo}</small></td>
-                    <td><small>${record.ac_cedula}</small></td>
-                    <td><small>${record.cargo_nombre}</small></td>
+                    <td><small>${record.nombre_completo || 'N/A'}</small></td>
+                    <td><small>${record.ac_cedula || 'N/A'}</small></td>
+                    <td><small>${record.cargo_nombre || 'N/A'}</small></td>
                     <td><small>${record.sub_area_nombre || '-'}</small></td>
-                    <td><small>${record.tema_nombre}</small></td>
+                    <td><small>${record.tema_nombre || 'N/A'}</small></td>
                     <td class="text-center"><small>${ultimaCapacitacion}</small></td>
                     <td class="text-center"><small>${proximaCapacitacion}</small></td>
                     <td class="text-center"><small>${diasDisplay}</small></td>
-                    <td><small><span class="badge bg-info">${record.rol_capacitador_nombre}</span></small></td>
+                    <td><small><span class="badge bg-info">${record.rol_capacitador_nombre || 'N/A'}</span></small></td>
                 </tr>
             `;
         }).join('');
@@ -294,6 +326,7 @@
     }
 
     function applyFilters() {
+        console.log('Applying filters...');
         const estadoFilter = document.getElementById('filterEstado').value;
         const situacionFilter = document.getElementById('filterSituacion').value;
         const cargoFilter = document.getElementById('filterCargo').value;
@@ -301,7 +334,9 @@
         const temaFilter = document.getElementById('filterTema').value;
         const rolFilter = document.getElementById('filterRol').value;
 
-        let filtered = dashboardData;
+        console.log('Filters:', { estadoFilter, situacionFilter, cargoFilter, subAreaFilter, temaFilter, rolFilter });
+
+        let filtered = [...dashboardData];
 
         if (estadoFilter) {
             filtered = filtered.filter(r => r.estado === estadoFilter);
@@ -312,11 +347,11 @@
         }
 
         if (cargoFilter) {
-            filtered = filtered.filter(r => r.ac_id_cargo === cargoFilter);
+            filtered = filtered.filter(r => r.ac_id_cargo == cargoFilter);
         }
 
         if (subAreaFilter) {
-            filtered = filtered.filter(r => r.ac_sub_area === subAreaFilter);
+            filtered = filtered.filter(r => r.ac_sub_area == subAreaFilter);
         }
 
         if (temaFilter) {
@@ -326,6 +361,8 @@
         if (rolFilter) {
             filtered = filtered.filter(r => r.id_rol_capacitador == rolFilter);
         }
+
+        console.log(`Filtered from ${dashboardData.length} to ${filtered.length} records`);
 
         updateStatistics(filtered);
         updateTopSummaries(filtered);
