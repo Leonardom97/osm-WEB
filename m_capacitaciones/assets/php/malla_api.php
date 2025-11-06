@@ -29,6 +29,7 @@ try {
                     SELECT DISTINCT
                         c.ac_id,
                         c.ac_cedula,
+                        c.ac_id_situación AS situacion,
                         c.ac_nombre1 || ' ' || COALESCE(c.ac_nombre2, '') || ' ' || c.ac_apellido1 || ' ' || COALESCE(c.ac_apellido2, '') AS nombre_completo,
                         c.ac_id_cargo,
                         cg.cargo AS cargo_nombre,
