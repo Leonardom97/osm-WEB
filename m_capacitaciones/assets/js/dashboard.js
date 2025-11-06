@@ -359,6 +359,10 @@
             filtered = filtered.filter(r => r.situacion === situacionFilter);
         }
 
+        // Note: Using loose equality (==) for ID comparisons because:
+        // - Database IDs are integers
+        // - Form values are strings
+        // - This allows type coercion for proper matching
         if (cargoFilter) {
             filtered = filtered.filter(r => r.ac_id_cargo == cargoFilter);
         }
@@ -410,11 +414,7 @@
         }
 
         try {
-            // Get currently displayed data
-            const tbody = document.querySelector('#tableDashboard tbody');
-            const rows = tbody.querySelectorAll('tr');
-            
-            // If no data rows, use full dataset
+            // Export all dashboard data (including filtered results if filters are applied)
             const dataToExport = dashboardData;
 
             const exportData = dataToExport.map(record => ({
