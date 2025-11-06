@@ -21,7 +21,7 @@ try {
         case 'get_malla':
             // Get the complete training matrix for all active employees
             // Match employees to programacion based on cargo and sub_area
-            // Calculate training status based on last training execution
+            // Calculate training status based on individual user's last training completion
             
             $stmt = $pg->query("
                 WITH colaborador_programacion AS (
@@ -41,7 +41,7 @@ try {
                         p.frecuencia_meses,
                         p.id_rol_capacitador,
                         r.nombre AS rol_capacitador_nombre,
-                        p.fecha_ultima_capacitacion AS programacion_ultima_fecha
+                        p.fecha_proxima_capacitacion AS programacion_proxima_fecha
                     FROM adm_colaboradores c
                     INNER JOIN adm_cargos cg ON c.ac_id_cargo = cg.id_cargo
                     LEFT JOIN adm_área a ON c.ac_sub_area = a.id_area
@@ -65,36 +65,50 @@ try {
                 )
                 SELECT 
                     cp.*,
-                    COALESCE(uc.ultima_fecha_ejecutada, cp.programacion_ultima_fecha) AS ultima_capacitacion,
+                    uc.ultima_fecha_ejecutada AS ultima_capacitacion,
                     CASE 
+                        -- If user has completed training, calculate next date from their completion
                         WHEN uc.ultima_fecha_ejecutada IS NOT NULL THEN
                             uc.ultima_fecha_ejecutada + (cp.frecuencia_meses || ' months')::INTERVAL
-                        WHEN cp.programacion_ultima_fecha IS NOT NULL THEN
-                            cp.programacion_ultima_fecha + (cp.frecuencia_meses || ' months')::INTERVAL
+                        -- Otherwise use programmed next date
                         ELSE
-                            NULL
+                            cp.programacion_proxima_fecha
                     END AS proxima_capacitacion,
                     CASE 
+                        -- If user has completed training, calculate days from their next due date
                         WHEN uc.ultima_fecha_ejecutada IS NOT NULL THEN
                             EXTRACT(DAY FROM (uc.ultima_fecha_ejecutada + (cp.frecuencia_meses || ' months')::INTERVAL - CURRENT_DATE))::int
-                        WHEN cp.programacion_ultima_fecha IS NOT NULL THEN
-                            EXTRACT(DAY FROM (cp.programacion_ultima_fecha + (cp.frecuencia_meses || ' months')::INTERVAL - CURRENT_DATE))::int
+                        -- Otherwise calculate from programmed date
+                        WHEN cp.programacion_proxima_fecha IS NOT NULL THEN
+                            EXTRACT(DAY FROM (cp.programacion_proxima_fecha - CURRENT_DATE))::int
                         ELSE
                             NULL
                     END AS dias_restantes,
                     CASE 
-                        WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_ultima_fecha IS NULL THEN 'pendiente'
-                        WHEN COALESCE(uc.ultima_fecha_ejecutada, cp.programacion_ultima_fecha) + (cp.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 'vencida'
-                        WHEN COALESCE(uc.ultima_fecha_ejecutada, cp.programacion_ultima_fecha) + (cp.frecuencia_meses || ' months')::INTERVAL - INTERVAL '30 days' <= CURRENT_DATE THEN 'proximo_vencer'
-                        ELSE 'al_dia'
+                        -- User has never completed this training and no programmed date
+                        WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_proxima_fecha IS NULL THEN 'pendiente'
+                        -- User has completed: check if their next due date has passed
+                        WHEN uc.ultima_fecha_ejecutada IS NOT NULL AND 
+                             uc.ultima_fecha_ejecutada + (cp.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 'vencida'
+                        WHEN uc.ultima_fecha_ejecutada IS NOT NULL AND 
+                             uc.ultima_fecha_ejecutada + (cp.frecuencia_meses || ' months')::INTERVAL - INTERVAL '30 days' <= CURRENT_DATE THEN 'proximo_vencer'
+                        -- User has not completed: check programmed date
+                        WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_proxima_fecha < CURRENT_DATE THEN 'vencida'
+                        WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_proxima_fecha - INTERVAL '30 days' <= CURRENT_DATE THEN 'proximo_vencer'
+                        -- User has completed and is up to date
+                        WHEN uc.ultima_fecha_ejecutada IS NOT NULL THEN 'al_dia'
+                        -- User has not completed but programmed date is in the future
+                        ELSE 'pendiente'
                     END AS estado
                 FROM colaborador_programacion cp
                 LEFT JOIN ultima_capacitacion_colaborador uc 
                     ON cp.ac_id = uc.id_colaborador AND cp.id_tema = uc.id_tema
                 ORDER BY 
                     CASE 
-                        WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_ultima_fecha IS NULL THEN 0
-                        WHEN COALESCE(uc.ultima_fecha_ejecutada, cp.programacion_ultima_fecha) + (cp.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 1
+                        WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_proxima_fecha IS NULL THEN 0
+                        WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_proxima_fecha < CURRENT_DATE THEN 1
+                        WHEN uc.ultima_fecha_ejecutada IS NOT NULL AND 
+                             uc.ultima_fecha_ejecutada + (cp.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 1
                         ELSE 2
                     END,
                     cp.nombre_completo, cp.tema_nombre
@@ -113,7 +127,7 @@ try {
                         p.id AS id_programacion,
                         p.id_tema,
                         p.frecuencia_meses,
-                        p.fecha_ultima_capacitacion AS programacion_ultima_fecha
+                        p.fecha_proxima_capacitacion AS programacion_proxima_fecha
                     FROM adm_colaboradores c
                     INNER JOIN cap_programacion p ON p.id_cargo = c.ac_id_cargo 
                         AND (p.sub_area = c.ac_sub_area OR (p.sub_area IS NULL AND c.ac_sub_area IS NULL))
@@ -133,9 +147,12 @@ try {
                 estados AS (
                     SELECT 
                         CASE 
-                            WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_ultima_fecha IS NULL THEN 'pendiente'
-                            WHEN COALESCE(uc.ultima_fecha_ejecutada, cp.programacion_ultima_fecha) + (cp.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 'vencida'
-                            ELSE 'al_dia'
+                            WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_proxima_fecha IS NULL THEN 'pendiente'
+                            WHEN uc.ultima_fecha_ejecutada IS NOT NULL AND 
+                                 uc.ultima_fecha_ejecutada + (cp.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 'vencida'
+                            WHEN uc.ultima_fecha_ejecutada IS NULL AND cp.programacion_proxima_fecha < CURRENT_DATE THEN 'vencida'
+                            WHEN uc.ultima_fecha_ejecutada IS NOT NULL THEN 'al_dia'
+                            ELSE 'pendiente'
                         END AS estado
                     FROM colaborador_programacion cp
                     LEFT JOIN ultima_capacitacion_colaborador uc 
@@ -176,7 +193,7 @@ try {
                         p.id_tema,
                         t.nombre AS tema_nombre,
                         p.frecuencia_meses,
-                        p.fecha_ultima_capacitacion,
+                        p.fecha_proxima_capacitacion,
                         r.nombre AS rol_capacitador_nombre
                     FROM cap_programacion p
                     INNER JOIN colaborador_info ci ON p.id_cargo = ci.ac_id_cargo 
@@ -197,26 +214,38 @@ try {
                 )
                 SELECT 
                     pa.*,
-                    COALESCE(uc.ultima_fecha, pa.fecha_ultima_capacitacion) AS ultima_capacitacion,
+                    uc.ultima_fecha AS ultima_capacitacion,
                     CASE 
+                        -- If user has completed, calculate next from their completion date
                         WHEN uc.ultima_fecha IS NOT NULL THEN
                             uc.ultima_fecha + (pa.frecuencia_meses || ' months')::INTERVAL
-                        WHEN pa.fecha_ultima_capacitacion IS NOT NULL THEN
-                            pa.fecha_ultima_capacitacion + (pa.frecuencia_meses || ' months')::INTERVAL
+                        -- Otherwise use programmed date
                         ELSE
-                            NULL
+                            pa.fecha_proxima_capacitacion
                     END AS proxima_capacitacion,
                     CASE 
-                        WHEN uc.ultima_fecha IS NULL AND pa.fecha_ultima_capacitacion IS NULL THEN 'pendiente'
-                        WHEN COALESCE(uc.ultima_fecha, pa.fecha_ultima_capacitacion) + (pa.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 'vencida'
-                        WHEN COALESCE(uc.ultima_fecha, pa.fecha_ultima_capacitacion) + (pa.frecuencia_meses || ' months')::INTERVAL - INTERVAL '30 days' <= CURRENT_DATE THEN 'proximo_vencer'
-                        ELSE 'al_dia'
+                        -- User has never completed and no programmed date
+                        WHEN uc.ultima_fecha IS NULL AND pa.fecha_proxima_capacitacion IS NULL THEN 'pendiente'
+                        -- User has completed: check their next due date
+                        WHEN uc.ultima_fecha IS NOT NULL AND 
+                             uc.ultima_fecha + (pa.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 'vencida'
+                        WHEN uc.ultima_fecha IS NOT NULL AND 
+                             uc.ultima_fecha + (pa.frecuencia_meses || ' months')::INTERVAL - INTERVAL '30 days' <= CURRENT_DATE THEN 'proximo_vencer'
+                        -- User has not completed: check programmed date
+                        WHEN uc.ultima_fecha IS NULL AND pa.fecha_proxima_capacitacion < CURRENT_DATE THEN 'vencida'
+                        WHEN uc.ultima_fecha IS NULL AND pa.fecha_proxima_capacitacion - INTERVAL '30 days' <= CURRENT_DATE THEN 'proximo_vencer'
+                        -- User has completed and is up to date
+                        WHEN uc.ultima_fecha IS NOT NULL THEN 'al_dia'
+                        -- User has not completed but programmed date is in future
+                        ELSE 'pendiente'
                     END AS estado,
                     CASE 
+                        -- If user has completed, calculate days from their next due date
                         WHEN uc.ultima_fecha IS NOT NULL THEN
                             EXTRACT(DAY FROM (uc.ultima_fecha + (pa.frecuencia_meses || ' months')::INTERVAL - CURRENT_DATE))::int
-                        WHEN pa.fecha_ultima_capacitacion IS NOT NULL THEN
-                            EXTRACT(DAY FROM (pa.fecha_ultima_capacitacion + (pa.frecuencia_meses || ' months')::INTERVAL - CURRENT_DATE))::int
+                        -- Otherwise calculate from programmed date
+                        WHEN pa.fecha_proxima_capacitacion IS NOT NULL THEN
+                            EXTRACT(DAY FROM (pa.fecha_proxima_capacitacion - CURRENT_DATE))::int
                         ELSE
                             NULL
                     END AS dias_restantes
@@ -224,8 +253,10 @@ try {
                 LEFT JOIN ultimas_capacitaciones uc ON pa.id_tema = uc.id_tema
                 ORDER BY 
                     CASE 
-                        WHEN uc.ultima_fecha IS NULL AND pa.fecha_ultima_capacitacion IS NULL THEN 0
-                        WHEN COALESCE(uc.ultima_fecha, pa.fecha_ultima_capacitacion) + (pa.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 1
+                        WHEN uc.ultima_fecha IS NULL AND pa.fecha_proxima_capacitacion IS NULL THEN 0
+                        WHEN uc.ultima_fecha IS NULL AND pa.fecha_proxima_capacitacion < CURRENT_DATE THEN 1
+                        WHEN uc.ultima_fecha IS NOT NULL AND 
+                             uc.ultima_fecha + (pa.frecuencia_meses || ' months')::INTERVAL < CURRENT_DATE THEN 1
                         ELSE 2
                     END,
                     pa.tema_nombre

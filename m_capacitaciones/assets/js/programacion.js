@@ -206,15 +206,12 @@
         const data = filterData || programaciones;
 
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center">No hay programaciones registradas</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay programaciones registradas</td></tr>';
             return;
         }
 
         tbody.innerHTML = data.map(prog => {
             // Format dates
-            const fechaUltima = prog.fecha_ultima_capacitacion 
-                ? new Date(prog.fecha_ultima_capacitacion).toLocaleDateString('es-CO') 
-                : '-';
             const fechaProxima = prog.fecha_proxima_capacitacion 
                 ? new Date(prog.fecha_proxima_capacitacion).toLocaleDateString('es-CO') 
                 : '-';
@@ -258,7 +255,6 @@
                 <td>${prog.tema_nombre}</td>
                 <td>${prog.frecuencia_meses}</td>
                 <td><span class="badge bg-info">${prog.rol_capacitador_nombre}</span></td>
-                <td class="text-center">${fechaUltima}</td>
                 <td class="text-center">${fechaProximaBadge}</td>
                 <td class="text-center">${fechaNotificacion}</td>
                 <td class="text-center">${pendientesBadge}</td>
@@ -447,11 +443,14 @@
             id_rol_capacitador: document.getElementById('inputRolCapacitador').value
         };
 
-        // Include fecha_ultima_capacitacion if provided
-        const fechaUltima = document.getElementById('inputFechaUltima').value;
-        if (fechaUltima) {
-            data.fecha_ultima_capacitacion = fechaUltima;
+        // Include fecha_proxima_capacitacion (required)
+        const fechaProxima = document.getElementById('inputFechaProxima').value;
+        if (!fechaProxima) {
+            alert('La fecha próxima de capacitación es obligatoria');
+            document.getElementById('inputFechaProxima').focus();
+            return;
         }
+        data.fecha_proxima_capacitacion = fechaProxima;
 
         if (editingId) {
             data.id = editingId;
@@ -496,8 +495,8 @@
                 document.getElementById('inputFrecuencia').value = prog.frecuencia_meses;
                 document.getElementById('inputRolCapacitador').value = prog.id_rol_capacitador;
                 
-                // Set fecha_ultima_capacitacion if available
-                document.getElementById('inputFechaUltima').value = prog.fecha_ultima_capacitacion || '';
+                // Set fecha_proxima_capacitacion if available
+                document.getElementById('inputFechaProxima').value = prog.fecha_proxima_capacitacion || '';
                 
                 // Set sub_area - ensure the value exists in the dropdown first
                 const subAreaSelect = document.getElementById('inputSubArea');
