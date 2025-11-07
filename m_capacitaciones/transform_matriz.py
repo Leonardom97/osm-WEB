@@ -51,7 +51,7 @@ CARGOS_DB = {
     'TECNOLOGO AGRICOLA': '137',
     'TESORERO': '011',
     'ANALISTA DE INFORMACION': '116',
-    'ASISTENTE ADMNISTRATIVO': '027',
+    'ASISTENTE ADMNISTRATIVO': '027',  # Note: DB has typo "ADMNISTRATIVO" instead of "ADMINISTRATIVO"
     'ASISTENTE CONTABLE': '114',
     'ASISTENTE DE ALMACEN Y COMPRAS': '014',
     'ASISTENTE DE MANTENIMIENTO': '100',
@@ -105,7 +105,7 @@ CARGOS_DB = {
     'GERENTE ADMINISTRATIVO': '003',
     'COORDINADOR DE SISTEMAS': '006',
     'GERENTE GENERAL': '001',
-    'ANALISTA CONTABLE  1': '009',
+    'ANALISTA CONTABLE  1': '009',  # Note: DB has double space before '1'
     'MENSAJERO': '019',
     'ASISTENTE ADMINISTRATIVO II': '077',
     'COORDINADOR AMBIENTAL Y SO': '010',
@@ -194,7 +194,7 @@ TEMAS_DB = {
     'Curso de 50 horas/ 20 horas': 56,
     'Comunicación asertiva': 57,
     'Excel': 58,
-    'Análisis e datos': 59,
+    'Análisis e datos': 59,  # Note: DB has typo "e" instead of "de"
     'Calibración y Mantenimiento de Equipos': 60,
     'Manejo del suelo ': 61,
     'Manejo del suelo': 61,
@@ -220,9 +220,9 @@ TEMAS_DB = {
     'Bienestar laboral': 78,
     'Riesgo vial': 79,
     'Trabajo seguro en alturas': 80,
+    'Coordinador trabajo seguro en alturas': 80,  # Maps to same as "Trabajo seguro en alturas" (ID 80)
     'Trabajo en espacios confinados ': 81,
     'Trabajo en espacios confinados': 81,
-    'Coordinador trabajo seguro en alturas': 80,  # Likely the same as #80
     'Actualizacion tributaria': 82,  # Note: ID 82 needs to be added to cap_tema table
     'Manejo racional de plaguicidas (Agroquimicos)': 50,  # Maps to existing "Manejo racional de plaguicidas"
 }
