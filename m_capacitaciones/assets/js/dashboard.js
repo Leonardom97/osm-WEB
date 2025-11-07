@@ -524,16 +524,16 @@
                 // This is intentional as date range filtering only applies to completed trainings
                 if (!r.ultima_capacitacion) return false;
                 
-                const recordDate = new Date(r.ultima_capacitacion);
+                const recordDate = parseLocalDate(r.ultima_capacitacion);
                 let passes = true;
                 
                 if (fechaDesde) {
-                    const desde = new Date(fechaDesde);
+                    const desde = parseLocalDate(fechaDesde);
                     passes = passes && recordDate >= desde;
                 }
                 
                 if (fechaHasta) {
-                    const hasta = new Date(fechaHasta);
+                    const hasta = parseLocalDate(fechaHasta);
                     hasta.setHours(23, 59, 59, 999); // Include the entire end date
                     passes = passes && recordDate <= hasta;
                 }

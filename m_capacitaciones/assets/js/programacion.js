@@ -233,7 +233,8 @@
             let diasPara = null;
             if (prog.fecha_proxima_capacitacion) {
                 const hoy = new Date();
-                const proxima = new Date(prog.fecha_proxima_capacitacion);
+                hoy.setHours(0, 0, 0, 0); // Set to midnight for accurate day comparison
+                const proxima = parseLocalDate(prog.fecha_proxima_capacitacion);
                 diasPara = Math.floor((proxima - hoy) / (1000 * 60 * 60 * 24));
             }
             
