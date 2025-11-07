@@ -440,7 +440,7 @@
   text-align: center;
   line-height: 1.15;
   min-height: 28px;
-  white-space: nowrap;
+  white-space: inherit;
 }
 
 /* Ajuste especial íconos supervision para modo compacto */
