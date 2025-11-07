@@ -469,7 +469,8 @@
   margin: 0;
 }
 .material-s .md-pagination-list li { display: inline-block; }
-.material-s .md-pagination-list .page-link {
+.material-s .md-pagination-list .page-link,
+.material-s .md-pagination-list .md-page-link {
   background: #D6B2AE;
   color: #772E22;
   border-radius: 6px;
@@ -484,18 +485,22 @@
   display: block;
   line-height: 1.1;
 }
-.material-s .md-pagination-list .page-link:hover {
+.material-s .md-pagination-list .page-link:hover,
+.material-s .md-pagination-list .md-page-link:hover {
   background: #772E22;
   color: #fff;
 }
-.material-s .md-pagination-list .active .page-link {
+.material-s .md-pagination-list .active .page-link,
+.material-s .md-pagination-list .active .md-page-link {
   background: #9C5146;
   color: #fff;
 }
-.material-s .md-pagination-list .disabled .page-link {
+.material-s .md-pagination-list .disabled .page-link,
+.material-s .md-pagination-list .disabled .md-page-link {
   background: #E2E2E2;
   color: #BDBDBD;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* ---------------------- FOOTER ---------------------- */

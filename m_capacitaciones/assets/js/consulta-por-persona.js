@@ -75,26 +75,137 @@ function renderTablaPersona() {
 
 function renderPaginacionPersona(total) {
   const nav = document.getElementById('pagination-persona');
+  if (!nav) return;
   const ul = nav.querySelector('.md-pagination-list');
+  if (!ul) return;
   ul.innerHTML = '';
-  const totalPaginas = Math.ceil(total/porPaginaPersona);
-  if (totalPaginas <= 1) return;
+  const totalPaginas = Math.max(1, Math.ceil(total / porPaginaPersona));
+  
+  if (totalPaginas <= 1) {
+    return;
+  }
 
-  for (let p=1; p<=totalPaginas; p++) {
+  // Previous button
+  const prevLi = document.createElement('li');
+  prevLi.className = 'md-page-item' + (paginaPersona === 1 ? ' disabled' : '');
+  const prevA = document.createElement('a');
+  prevA.className = 'md-page-link';
+  prevA.href = '#';
+  prevA.setAttribute('aria-label', 'Previous');
+  prevA.innerHTML = '<span aria-hidden="true">&laquo;</span>';
+  prevA.onclick = function(e){
+    e.preventDefault();
+    if(paginaPersona > 1) { paginaPersona--; renderTablaPersona(); }
+  };
+  prevLi.appendChild(prevA);
+  ul.appendChild(prevLi);
+
+  // Calculate page numbers to show (max 7)
+  let startPage = 1;
+  let endPage = totalPaginas;
+  
+  if (totalPaginas > 7) {
+    if (paginaPersona <= 4) {
+      startPage = 1;
+      endPage = 5;
+    } else if (paginaPersona >= totalPaginas - 3) {
+      startPage = totalPaginas - 4;
+      endPage = totalPaginas;
+    } else {
+      startPage = paginaPersona - 1;
+      endPage = paginaPersona + 1;
+    }
+  }
+
+  // First page button if not in range
+  if (startPage > 1) {
     const li = document.createElement('li');
-    li.className = p===paginaPersona ? 'md-page-item active' : 'md-page-item';
+    li.className = 'md-page-item';
     const a = document.createElement('a');
     a.className = 'md-page-link';
     a.href = '#';
-    a.textContent = p;
-    a.onclick = e => {
+    a.textContent = '1';
+    a.onclick = function(e){
       e.preventDefault();
-      paginaPersona = p;
+      paginaPersona = 1;
+      renderTablaPersona();
+    };
+    li.appendChild(a);
+    ul.appendChild(li);
+    
+    // Add ellipsis if there's a gap
+    if (startPage > 2) {
+      const ellipsisLi = document.createElement('li');
+      ellipsisLi.className = 'md-page-item disabled';
+      const ellipsisA = document.createElement('a');
+      ellipsisA.className = 'md-page-link';
+      ellipsisA.href = '#';
+      ellipsisA.textContent = '...';
+      ellipsisLi.appendChild(ellipsisA);
+      ul.appendChild(ellipsisLi);
+    }
+  }
+
+  // Page numbers
+  for(let i=startPage; i<=endPage; i++) {
+    const li = document.createElement('li');
+    li.className = 'md-page-item' + (i === paginaPersona ? ' active' : '');
+    const a = document.createElement('a');
+    a.className = 'md-page-link';
+    a.href = '#';
+    a.textContent = i;
+    a.onclick = function(e){
+      e.preventDefault();
+      paginaPersona = i;
       renderTablaPersona();
     };
     li.appendChild(a);
     ul.appendChild(li);
   }
+
+  // Last page button if not in range
+  if (endPage < totalPaginas) {
+    // Add ellipsis if there's a gap
+    if (endPage < totalPaginas - 1) {
+      const ellipsisLi = document.createElement('li');
+      ellipsisLi.className = 'md-page-item disabled';
+      const ellipsisA = document.createElement('a');
+      ellipsisA.className = 'md-page-link';
+      ellipsisA.href = '#';
+      ellipsisA.textContent = '...';
+      ellipsisLi.appendChild(ellipsisA);
+      ul.appendChild(ellipsisLi);
+    }
+    
+    const li = document.createElement('li');
+    li.className = 'md-page-item';
+    const a = document.createElement('a');
+    a.className = 'md-page-link';
+    a.href = '#';
+    a.textContent = totalPaginas;
+    a.onclick = function(e){
+      e.preventDefault();
+      paginaPersona = totalPaginas;
+      renderTablaPersona();
+    };
+    li.appendChild(a);
+    ul.appendChild(li);
+  }
+
+  // Next button
+  const nextLi = document.createElement('li');
+  nextLi.className = 'md-page-item' + (paginaPersona === totalPaginas ? ' disabled' : '');
+  const nextA = document.createElement('a');
+  nextA.className = 'md-page-link';
+  nextA.href = '#';
+  nextA.setAttribute('aria-label', 'Next');
+  nextA.innerHTML = '<span aria-hidden="true">&raquo;</span>';
+  nextA.onclick = function(e){
+    e.preventDefault();
+    if(paginaPersona < totalPaginas) { paginaPersona++; renderTablaPersona(); }
+  };
+  nextLi.appendChild(nextA);
+  ul.appendChild(nextLi);
 }
 
 // Manejadores de eventos
