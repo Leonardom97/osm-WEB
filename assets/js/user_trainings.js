@@ -158,38 +158,57 @@
 
         tbody.innerHTML = data.map(training => `
             <tr>
-                <td>${training.proceso || '-'}</td>
-                <td>${training.lugar || '-'}</td>
-                <td>${training.responsable_capacitacion || '-'}</td>
-                <td>${training.tema || '-'}</td>
-                <td>${training.tipo_actividad || '-'}</td>
-                <td>${formatDateForTable(training.fecha)}</td>
-                <td>${training.hora_inicio || '-'}</td>
-                <td>${training.hora_fin || '-'}</td>
-                <td>${formatEstadoAprobacion(training.estado_aprovacion)}</td>
-                <td>${training.empresa || '-'}</td>
-                <td>${training.cargo || '-'}</td>
-                <td>${training.area || '-'}</td>
-                <td>${training.sub_area || '-'}</td>
-                <td>${training.rango || '-'}</td>
-                <td>${training.situacion || '-'}</td>
+                <td><small>${training.proceso || '-'}</small></td>
+                <td><small>${training.lugar || '-'}</small></td>
+                <td><small>${training.responsable_capacitacion || '-'}</small></td>
+                <td><small>${training.tema || '-'}</small></td>
+                <td><small>${training.tipo_actividad || '-'}</small></td>
+                <td><small>${formatDateForTable(training.fecha)}</small></td>
+                <td><small>${formatTimeForTable(training.hora_inicio)}</small></td>
+                <td><small>${formatTimeForTable(training.hora_fin)}</small></td>
+                <td><small>${formatEstadoAprobacion(training.estado_aprovacion)}</small></td>
+                <td><small>${training.empresa || '-'}</small></td>
+                <td><small>${training.cargo || '-'}</small></td>
+                <td><small>${training.area || '-'}</small></td>
+                <td><small>${training.sub_area || '-'}</small></td>
+                <td><small>${training.rango || '-'}</small></td>
+                <td><small>${training.situacion || '-'}</small></td>
             </tr>
         `).join('');
 
         countText.textContent = `Total: ${data.length} registros`;
     }
 
+    // Utility functions for date/time formatting
+    // Formats a date string to dd/mm/yyyy format
     function formatDateForTable(dateString) {
         if (!dateString) return '-';
         try {
             const date = new Date(dateString);
-            return date.toLocaleDateString('es-CO', { 
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
-            });
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
         } catch (e) {
+            console.warn('Date formatting error:', e);
             return dateString;
+        }
+    }
+    
+    // Formats a time string to hh:mm format (removing seconds if present)
+    function formatTimeForTable(timeString) {
+        if (!timeString) return '-';
+        try {
+            // Handle different time formats
+            // If it's in HH:MM:SS format, extract just HH:MM
+            const timeParts = timeString.split(':');
+            if (timeParts.length >= 2) {
+                return `${timeParts[0]}:${timeParts[1]}`;
+            }
+            return timeString;
+        } catch (e) {
+            console.warn('Time formatting error:', e);
+            return timeString;
         }
     }
 
