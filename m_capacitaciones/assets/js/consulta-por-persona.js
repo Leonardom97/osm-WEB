@@ -89,7 +89,7 @@ function renderPaginacionPersona(total) {
   const prevLi = document.createElement('li');
   prevLi.className = 'md-page-item' + (paginaPersona === 1 ? ' disabled' : '');
   const prevA = document.createElement('a');
-  prevA.className = 'page-link';
+  prevA.className = 'md-page-link';
   prevA.href = '#';
   prevA.setAttribute('aria-label', 'Previous');
   prevA.innerHTML = '<span aria-hidden="true">&laquo;</span>';
@@ -122,7 +122,7 @@ function renderPaginacionPersona(total) {
     const li = document.createElement('li');
     li.className = 'md-page-item';
     const a = document.createElement('a');
-    a.className = 'page-link';
+    a.className = 'md-page-link';
     a.href = '#';
     a.textContent = '1';
     a.onclick = function(e){
@@ -138,7 +138,7 @@ function renderPaginacionPersona(total) {
       const ellipsisLi = document.createElement('li');
       ellipsisLi.className = 'md-page-item disabled';
       const ellipsisA = document.createElement('a');
-      ellipsisA.className = 'page-link';
+      ellipsisA.className = 'md-page-link';
       ellipsisA.href = '#';
       ellipsisA.textContent = '...';
       ellipsisLi.appendChild(ellipsisA);
@@ -151,7 +151,7 @@ function renderPaginacionPersona(total) {
     const li = document.createElement('li');
     li.className = 'md-page-item' + (i === paginaPersona ? ' active' : '');
     const a = document.createElement('a');
-    a.className = 'page-link';
+    a.className = 'md-page-link';
     a.href = '#';
     a.textContent = i;
     a.onclick = function(e){
@@ -170,7 +170,7 @@ function renderPaginacionPersona(total) {
       const ellipsisLi = document.createElement('li');
       ellipsisLi.className = 'md-page-item disabled';
       const ellipsisA = document.createElement('a');
-      ellipsisA.className = 'page-link';
+      ellipsisA.className = 'md-page-link';
       ellipsisA.href = '#';
       ellipsisA.textContent = '...';
       ellipsisLi.appendChild(ellipsisA);
@@ -180,7 +180,7 @@ function renderPaginacionPersona(total) {
     const li = document.createElement('li');
     li.className = 'md-page-item';
     const a = document.createElement('a');
-    a.className = 'page-link';
+    a.className = 'md-page-link';
     a.href = '#';
     a.textContent = totalPaginas;
     a.onclick = function(e){
@@ -196,7 +196,7 @@ function renderPaginacionPersona(total) {
   const nextLi = document.createElement('li');
   nextLi.className = 'md-page-item' + (paginaPersona === totalPaginas ? ' disabled' : '');
   const nextA = document.createElement('a');
-  nextA.className = 'page-link';
+  nextA.className = 'md-page-link';
   nextA.href = '#';
   nextA.setAttribute('aria-label', 'Next');
   nextA.innerHTML = '<span aria-hidden="true">&raquo;</span>';
