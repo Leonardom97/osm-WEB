@@ -544,9 +544,9 @@
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function(event) {
             try {
-                const data = new Uint8Array(e.target.result);
+                const data = new Uint8Array(event.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
@@ -554,7 +554,7 @@
                 processExcelData(jsonData);
             } catch (error) {
                 console.error('Error reading Excel:', error);
-                showAlert('Error al leer el archivo Excel', 'danger');
+                showAlert('Error al leer el archivo Excel: ' + error.message, 'danger');
             }
         };
         reader.readAsArrayBuffer(file);
@@ -570,7 +570,16 @@
         for (let i = 1; i < data.length; i++) {
             const row = data[i];
             
-            if (!row || row.length < 5) continue;
+            // Skip completely empty rows
+            if (!row || row.every(cell => cell === null || cell === undefined || cell === '')) {
+                continue;
+            }
+            
+            // Validate minimum number of columns
+            if (row.length < 5) {
+                errors.push(`Fila ${i + 1}: Faltan columnas (se esperan al menos 5 columnas)`);
+                continue;
+            }
 
             const cargo_id = row[0];
             const sub_area = row[1];
@@ -578,32 +587,69 @@
             const frecuencia = row[3];
             const rol_nombre = row[4];
 
-            // Find rol ID by name
-            const rol = roles.find(r => r.nombre.toLowerCase() === String(rol_nombre).toLowerCase());
+            // Validate required fields
+            if (!cargo_id && cargo_id !== 0) {
+                errors.push(`Fila ${i + 1}: Cargo ID es obligatorio`);
+                continue;
+            }
             
-            if (!rol) {
-                errors.push(`Fila ${i + 1}: Rol "${rol_nombre}" no encontrado`);
+            if (!sub_area && sub_area !== 0) {
+                errors.push(`Fila ${i + 1}: Sub Área ID es obligatorio`);
+                continue;
+            }
+            
+            if (!tema_id && tema_id !== 0) {
+                errors.push(`Fila ${i + 1}: Tema ID es obligatorio`);
+                continue;
+            }
+            
+            if (!rol_nombre) {
+                errors.push(`Fila ${i + 1}: Rol Capacitador es obligatorio`);
                 continue;
             }
 
+            // Convert and validate tema_id
+            const temaIdNum = parseInt(tema_id);
+            if (isNaN(temaIdNum)) {
+                errors.push(`Fila ${i + 1}: Tema ID debe ser un número válido`);
+                continue;
+            }
+
+            // Convert and validate frecuencia
+            const frecuenciaNum = parseInt(frecuencia);
+            if (isNaN(frecuenciaNum) || frecuenciaNum < 1) {
+                errors.push(`Fila ${i + 1}: Frecuencia debe ser un número válido mayor a 0 (se usará 12 por defecto)`);
+            }
+
+            // Find rol ID by name
+            const rol = roles.find(r => r.nombre.toLowerCase() === String(rol_nombre).trim().toLowerCase());
+            
+            if (!rol) {
+                errors.push(`Fila ${i + 1}: Rol "${rol_nombre}" no encontrado en la base de datos`);
+                continue;
+            }
+
+            // Convert sub_area to string for consistent comparison
+            const subAreaStr = String(sub_area).trim();
+            
             const item = {
-                id_cargo: String(cargo_id),
-                sub_area: sub_area || null,
-                id_tema: parseInt(tema_id),
-                frecuencia_meses: parseInt(frecuencia) || 12,
+                id_cargo: String(cargo_id).trim(),
+                sub_area: subAreaStr,
+                id_tema: temaIdNum,
+                frecuencia_meses: isNaN(frecuenciaNum) ? 12 : frecuenciaNum,
                 id_rol_capacitador: rol.id
             };
 
             // Find names for preview
             const cargo = cargos.find(c => c.id === item.id_cargo);
             const tema = temas.find(t => t.id === item.id_tema);
-            const subArea = subAreas.find(sa => sa.id_area === item.sub_area);
+            const subArea = subAreas.find(sa => String(sa.id_area) === item.sub_area);
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${cargo ? cargo.cargo : cargo_id}</td>
-                <td>${subArea ? subArea.sub_area : (item.sub_area || '-')}</td>
-                <td>${tema ? tema.nombre : tema_id}</td>
+                <td>${cargo ? cargo.cargo : `<span class="text-warning">${cargo_id} (no encontrado)</span>`}</td>
+                <td>${subArea ? subArea.sub_area : `<span class="text-warning">${item.sub_area} (no encontrado)</span>`}</td>
+                <td>${tema ? tema.nombre : `<span class="text-warning">${tema_id} (no encontrado)</span>`}</td>
                 <td>${item.frecuencia_meses}</td>
                 <td>${rol.nombre}</td>
             `;
