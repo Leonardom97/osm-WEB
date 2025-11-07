@@ -471,8 +471,10 @@
         const subAreaFilter = document.getElementById('filterSubArea').value;
         const temaFilter = document.getElementById('filterTema').value;
         const rolFilter = document.getElementById('filterRol').value;
+        const fechaDesde = document.getElementById('filterFechaDesde').value;
+        const fechaHasta = document.getElementById('filterFechaHasta').value;
 
-        console.log('Filters:', { estadoFilter, situacionFilter, cargoFilter, subAreaFilter, temaFilter, rolFilter });
+        console.log('Filters:', { estadoFilter, situacionFilter, cargoFilter, subAreaFilter, temaFilter, rolFilter, fechaDesde, fechaHasta });
 
         let filtered = [...dashboardData];
 
@@ -504,6 +506,30 @@
             filtered = filtered.filter(r => r.id_rol_capacitador == rolFilter);
         }
 
+        // Date range filter
+        if (fechaDesde || fechaHasta) {
+            filtered = filtered.filter(r => {
+                // Use ultima_capacitacion for date filtering
+                if (!r.ultima_capacitacion) return false;
+                
+                const recordDate = new Date(r.ultima_capacitacion);
+                let passes = true;
+                
+                if (fechaDesde) {
+                    const desde = new Date(fechaDesde);
+                    passes = passes && recordDate >= desde;
+                }
+                
+                if (fechaHasta) {
+                    const hasta = new Date(fechaHasta);
+                    hasta.setHours(23, 59, 59, 999); // Include the entire end date
+                    passes = passes && recordDate <= hasta;
+                }
+                
+                return passes;
+            });
+        }
+
         console.log(`Filtered from ${dashboardData.length} to ${filtered.length} records`);
 
         currentPage = 1; // Reset to first page when filters are applied
@@ -519,6 +545,8 @@
         document.getElementById('filterSubArea').value = '';
         document.getElementById('filterTema').value = '';
         document.getElementById('filterRol').value = '';
+        document.getElementById('filterFechaDesde').value = '';
+        document.getElementById('filterFechaHasta').value = '';
         
         currentPage = 1; // Reset to first page when filters are cleared
         updateStatistics(dashboardData);
