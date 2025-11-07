@@ -12,16 +12,6 @@
         roles: []
     };
 
-    // Parse dates correctly to avoid timezone issues
-    // When PostgreSQL returns a date like "2024-11-03", JavaScript's Date constructor
-    // interprets it as UTC midnight, which can cause the date to shift by one day
-    // when converted to local time. We parse it as a local date instead.
-    function parseLocalDate(dateStr) {
-        if (!dateStr) return null;
-        const [year, month, day] = dateStr.split('-').map(Number);
-        return new Date(year, month - 1, day);
-    }
-
     // Load HTML components
     async function includeComponent(file, selector) {
         try {
