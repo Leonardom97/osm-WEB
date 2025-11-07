@@ -1,0 +1,27 @@
+# Test files
+test_*.html
+**/mock_*.php
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/tmp/
+
+# PHP
+vendor/
+composer.phar
+
+# Database
+*.sql
+*.sqlite
+*.db
