@@ -129,9 +129,9 @@ function renderBootstrapPagination(total) {
 
   // Previous button
   const prevLi = document.createElement('li');
-  prevLi.className = 'page-item' + (pagina === 1 ? ' disabled' : '');
+  prevLi.className = (pagNav.id === 'pagination-capacitaciones' ? 'md-page-item' : 'page-item') + (pagina === 1 ? ' disabled' : '');
   const prevA = document.createElement('a');
-  prevA.className = 'page-link';
+  prevA.className = pagNav.id === 'pagination-capacitaciones' ? 'md-page-link' : 'page-link';
   prevA.href = '#';
   prevA.setAttribute('aria-label', 'Previous');
   prevA.innerHTML = '<span aria-hidden="true">&laquo;</span>';
@@ -162,12 +162,15 @@ function renderBootstrapPagination(total) {
     }
   }
 
+  const itemClass = pagNav.id === 'pagination-capacitaciones' ? 'md-page-item' : 'page-item';
+  const linkClass = pagNav.id === 'pagination-capacitaciones' ? 'md-page-link' : 'page-link';
+  
   // First page button if not in range
   if (startPage > 1) {
     const li = document.createElement('li');
-    li.className = 'page-item';
+    li.className = itemClass;
     const a = document.createElement('a');
-    a.className = 'page-link';
+    a.className = linkClass;
     a.href = '#';
     a.textContent = '1';
     a.onclick = function(e){
@@ -181,9 +184,9 @@ function renderBootstrapPagination(total) {
     // Add ellipsis if there's a gap
     if (startPage > 2) {
       const ellipsisLi = document.createElement('li');
-      ellipsisLi.className = 'page-item disabled';
+      ellipsisLi.className = itemClass + ' disabled';
       const ellipsisA = document.createElement('a');
-      ellipsisA.className = 'page-link';
+      ellipsisA.className = linkClass;
       ellipsisA.href = '#';
       ellipsisA.textContent = '...';
       ellipsisLi.appendChild(ellipsisA);
@@ -194,9 +197,9 @@ function renderBootstrapPagination(total) {
   // Page numbers
   for(let i=startPage; i<=endPage; i++) {
     const li = document.createElement('li');
-    li.className = 'page-item' + (i === pagina ? ' active' : '');
+    li.className = itemClass + (i === pagina ? ' active' : '');
     const a = document.createElement('a');
-    a.className = 'page-link';
+    a.className = linkClass;
     a.href = '#';
     a.textContent = i;
     a.onclick = function(e){
@@ -213,9 +216,9 @@ function renderBootstrapPagination(total) {
     // Add ellipsis if there's a gap
     if (endPage < totalPaginas - 1) {
       const ellipsisLi = document.createElement('li');
-      ellipsisLi.className = 'page-item disabled';
+      ellipsisLi.className = itemClass + ' disabled';
       const ellipsisA = document.createElement('a');
-      ellipsisA.className = 'page-link';
+      ellipsisA.className = linkClass;
       ellipsisA.href = '#';
       ellipsisA.textContent = '...';
       ellipsisLi.appendChild(ellipsisA);
@@ -223,9 +226,9 @@ function renderBootstrapPagination(total) {
     }
     
     const li = document.createElement('li');
-    li.className = 'page-item';
+    li.className = itemClass;
     const a = document.createElement('a');
-    a.className = 'page-link';
+    a.className = linkClass;
     a.href = '#';
     a.textContent = totalPaginas;
     a.onclick = function(e){
@@ -239,9 +242,9 @@ function renderBootstrapPagination(total) {
 
   // Next button
   const nextLi = document.createElement('li');
-  nextLi.className = 'page-item' + (pagina === totalPaginas ? ' disabled' : '');
+  nextLi.className = itemClass + (pagina === totalPaginas ? ' disabled' : '');
   const nextA = document.createElement('a');
-  nextA.className = 'page-link';
+  nextA.className = linkClass;
   nextA.href = '#';
   nextA.setAttribute('aria-label', 'Next');
   nextA.innerHTML = '<span aria-hidden="true">&raquo;</span>';
