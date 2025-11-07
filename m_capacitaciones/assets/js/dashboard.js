@@ -16,25 +16,6 @@
     let recordsPerPage = 10;
     let currentFilteredData = [];
 
-    // Helper function to format dates without timezone offset issues
-    // Parses date string in local timezone to avoid UTC conversion issues
-    function formatDateLocal(dateString) {
-        if (!dateString) return null;
-        
-        // Parse date components to avoid timezone issues
-        // Date from DB is in format YYYY-MM-DD
-        const parts = dateString.split('T')[0].split('-');
-        const year = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1; // months are 0-indexed
-        const day = parseInt(parts[2], 10);
-        
-        // Create date in local timezone
-        const date = new Date(year, month, day);
-        
-        // Format as local date string
-        return date.toLocaleDateString('es-CO');
-    }
-
     // Load HTML components
     async function includeComponent(file, selector) {
         try {
