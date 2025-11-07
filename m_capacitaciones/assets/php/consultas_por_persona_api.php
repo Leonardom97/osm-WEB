@@ -38,7 +38,7 @@ capacitaciones_pendientes AS (
       SELECT 1 FROM cap_formulario cf
       WHERE cf.id = fa.id_formulario
         AND cf.id_tema = cp.id_tema
-        AND cf.fecha >= CURRENT_DATE - (cp.frecuencia_meses || ' months')::INTERVAL
+        AND cf.fecha >= CURRENT_DATE - (COALESCE(cp.frecuencia_meses, 12) || ' months')::INTERVAL
     )
   WHERE ac.ac_id_situación IN ('A', 'V', 'P')
     AND cp.activo = true
