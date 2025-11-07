@@ -510,6 +510,8 @@
         if (fechaDesde || fechaHasta) {
             filtered = filtered.filter(r => {
                 // Use ultima_capacitacion for date filtering
+                // Note: Records without ultima_capacitacion (no training yet) are excluded
+                // This is intentional as date range filtering only applies to completed trainings
                 if (!r.ultima_capacitacion) return false;
                 
                 const recordDate = new Date(r.ultima_capacitacion);

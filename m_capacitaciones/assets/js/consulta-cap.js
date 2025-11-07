@@ -66,8 +66,15 @@ function filtrarDatos() {
 }
 
 function renderTabla() {
-  const tbody = document.querySelector('#tabla-capacitaciones tbody, #tabla tbody');
-  if (!tbody) return;
+  // Try new structure first, fallback to old structure for compatibility
+  let tbody = document.querySelector('#tabla-capacitaciones tbody');
+  if (!tbody) {
+    tbody = document.querySelector('#tabla tbody');
+    if (!tbody) {
+      console.warn('No table body found for rendering');
+      return;
+    }
+  }
   tbody.innerHTML = '';
   const filtrados = filtrarDatos();
   const total = filtrados.length;

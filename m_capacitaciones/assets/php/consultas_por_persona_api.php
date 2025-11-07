@@ -5,6 +5,7 @@ require_once(__DIR__ . '/../../../php/db_postgres.php');
 
 $sql = "
 WITH capacitaciones_realizadas AS (
+  -- Count distinct trainings attended by each employee
   SELECT 
     fa.cedula,
     COUNT(DISTINCT fa.id_formulario) as total_realizadas
@@ -13,6 +14,7 @@ WITH capacitaciones_realizadas AS (
   GROUP BY fa.cedula
 ),
 capacitaciones_programadas AS (
+  -- Count programmed trainings per employee based on their position and sub-area
   SELECT 
     ac.cedula,
     COUNT(DISTINCT cp.id) as total_programadas

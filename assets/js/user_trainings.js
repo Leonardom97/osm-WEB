@@ -179,6 +179,8 @@
         countText.textContent = `Total: ${data.length} registros`;
     }
 
+    // Utility functions for date/time formatting
+    // Formats a date string to dd/mm/yyyy format
     function formatDateForTable(dateString) {
         if (!dateString) return '-';
         try {
@@ -188,10 +190,12 @@
             const year = date.getFullYear();
             return `${day}/${month}/${year}`;
         } catch (e) {
+            console.warn('Date formatting error:', e);
             return dateString;
         }
     }
     
+    // Formats a time string to hh:mm format (removing seconds if present)
     function formatTimeForTable(timeString) {
         if (!timeString) return '-';
         try {
@@ -203,6 +207,7 @@
             }
             return timeString;
         } catch (e) {
+            console.warn('Time formatting error:', e);
             return timeString;
         }
     }
