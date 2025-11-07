@@ -58,7 +58,7 @@ try {
                     SELECT 
                         COALESCE(fa.id_colaborador, c.ac_id) AS id_colaborador,
                         f.id_tema,
-                        MAX(f.fecha) AS ultima_fecha_ejecutada
+                        MAX(f.fecha)::date AS ultima_fecha_ejecutada
                     FROM cap_formulario_asistente fa
                     INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                     LEFT JOIN adm_colaboradores c ON fa.cedula = c.ac_cedula AND fa.id_colaborador IS NULL
@@ -141,7 +141,7 @@ try {
                     SELECT 
                         COALESCE(fa.id_colaborador, c.ac_id) AS id_colaborador,
                         f.id_tema,
-                        MAX(f.fecha) AS ultima_fecha_ejecutada
+                        MAX(f.fecha)::date AS ultima_fecha_ejecutada
                     FROM cap_formulario_asistente fa
                     INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                     LEFT JOIN adm_colaboradores c ON fa.cedula = c.ac_cedula AND fa.id_colaborador IS NULL
@@ -210,7 +210,7 @@ try {
                     -- Handle both id_colaborador (new records) and cedula-based matching (legacy records)
                     SELECT 
                         f.id_tema,
-                        MAX(f.fecha) AS ultima_fecha
+                        MAX(f.fecha)::date AS ultima_fecha
                     FROM cap_formulario_asistente fa
                     INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                     INNER JOIN colaborador_info ci ON (fa.id_colaborador = ci.ac_id OR fa.cedula = ci.ac_cedula)

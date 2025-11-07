@@ -12,6 +12,16 @@
     let editingId = null;
     let importData = [];
 
+    // Parse dates correctly to avoid timezone issues
+    // When PostgreSQL returns a date like "2024-11-03", JavaScript's Date constructor
+    // interprets it as UTC midnight, which can cause the date to shift by one day
+    // when converted to local time. We parse it as a local date instead.
+    function parseLocalDate(dateStr) {
+        if (!dateStr) return null;
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
     // Load HTML components (navbar and sidebar)
     async function includeComponent(file, selector) {
         try {
@@ -136,7 +146,7 @@
             const colaboradoresCount = parseInt(alert.colaboradores_pendientes) || 0;
             
             const fechaProxima = alert.fecha_proxima_capacitacion 
-                ? new Date(alert.fecha_proxima_capacitacion).toLocaleDateString('es-CO')
+                ? parseLocalDate(alert.fecha_proxima_capacitacion).toLocaleDateString('es-CO')
                 : '-';
             
             return `
@@ -213,10 +223,10 @@
         tbody.innerHTML = data.map(prog => {
             // Format dates
             const fechaProxima = prog.fecha_proxima_capacitacion 
-                ? new Date(prog.fecha_proxima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(prog.fecha_proxima_capacitacion).toLocaleDateString('es-CO') 
                 : '-';
             const fechaNotificacion = prog.fecha_notificacion_previa 
-                ? new Date(prog.fecha_notificacion_previa).toLocaleDateString('es-CO') 
+                ? parseLocalDate(prog.fecha_notificacion_previa).toLocaleDateString('es-CO') 
                 : '-';
             
             // Calculate days until next training

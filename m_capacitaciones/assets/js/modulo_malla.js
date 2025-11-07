@@ -12,6 +12,16 @@
         roles: []
     };
 
+    // Parse dates correctly to avoid timezone issues
+    // When PostgreSQL returns a date like "2024-11-03", JavaScript's Date constructor
+    // interprets it as UTC midnight, which can cause the date to shift by one day
+    // when converted to local time. We parse it as a local date instead.
+    function parseLocalDate(dateStr) {
+        if (!dateStr) return null;
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
     // Load HTML components
     async function includeComponent(file, selector) {
         try {
@@ -141,11 +151,11 @@
             }
 
             const ultimaCapacitacion = record.ultima_capacitacion 
-                ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.ultima_capacitacion).toLocaleDateString('es-CO') 
                 : '-';
             
             const proximaCapacitacion = record.proxima_capacitacion 
-                ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.proxima_capacitacion).toLocaleDateString('es-CO') 
                 : '-';
 
             const diasRestantes = record.dias_restantes !== null ? record.dias_restantes : '-';
@@ -228,10 +238,10 @@
             'Tema': record.tema_nombre,
             'Frecuencia (meses)': record.frecuencia_meses,
             'Última Capacitación': record.ultima_capacitacion 
-                ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.ultima_capacitacion).toLocaleDateString('es-CO') 
                 : '-',
             'Próxima Capacitación': record.proxima_capacitacion 
-                ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.proxima_capacitacion).toLocaleDateString('es-CO') 
                 : '-',
             'Días Restantes': record.dias_restantes !== null ? record.dias_restantes : '-',
             'Rol Capacitador': record.rol_capacitador_nombre
