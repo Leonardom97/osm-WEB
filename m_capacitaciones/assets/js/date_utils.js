@@ -20,8 +20,9 @@ function formatDateLocal(dateString) {
     if (!dateString) return null;
     
     // Parse date components to avoid timezone issues
-    // Date from DB is in format YYYY-MM-DD
-    const parts = dateString.split('T')[0].split('-');
+    // Date from DB is in format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS
+    const dateOnly = dateString.includes('T') ? dateString.split('T')[0] : dateString;
+    const parts = dateOnly.split('-');
     const year = parseInt(parts[0], 10);
     const month = parseInt(parts[1], 10) - 1; // months are 0-indexed
     const day = parseInt(parts[2], 10);

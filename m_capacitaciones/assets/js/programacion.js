@@ -558,6 +558,11 @@
         document.getElementById('importErrors').classList.add('d-none');
         document.getElementById('btnImportar').disabled = true;
 
+        // Helper function to reset file input
+        const resetFileInput = () => {
+            document.getElementById('inputExcel').value = '';
+        };
+
         const reader = new FileReader();
         reader.onload = function(event) {
             try {
@@ -575,15 +580,14 @@
             } catch (error) {
                 console.error('Error reading Excel:', error);
                 showAlert('Error al leer el archivo Excel: ' + error.message + '. Por favor, verifique que el archivo sea un Excel válido (.xlsx o .xls).', 'danger');
-                // Reset the file input so the user can try again
-                document.getElementById('inputExcel').value = '';
+                resetFileInput();
             }
         };
         
         reader.onerror = function(error) {
             console.error('FileReader error:', error);
             showAlert('Error al leer el archivo. Por favor, intente nuevamente.', 'danger');
-            document.getElementById('inputExcel').value = '';
+            resetFileInput();
         };
         
         reader.readAsArrayBuffer(file);
