@@ -71,7 +71,7 @@ try {
                     CASE 
                         -- If user has completed training, calculate next date from their completion
                         WHEN uc.ultima_fecha_ejecutada IS NOT NULL THEN
-                            uc.ultima_fecha_ejecutada + (cp.frecuencia_meses || ' months')::INTERVAL
+                            (uc.ultima_fecha_ejecutada + (cp.frecuencia_meses || ' months')::INTERVAL)::date
                         -- Otherwise use programmed next date
                         ELSE
                             cp.programacion_proxima_fecha
@@ -223,7 +223,7 @@ try {
                     CASE 
                         -- If user has completed, calculate next from their completion date
                         WHEN uc.ultima_fecha IS NOT NULL THEN
-                            uc.ultima_fecha + (pa.frecuencia_meses || ' months')::INTERVAL
+                            (uc.ultima_fecha + (pa.frecuencia_meses || ' months')::INTERVAL)::date
                         -- Otherwise use programmed date
                         ELSE
                             pa.fecha_proxima_capacitacion

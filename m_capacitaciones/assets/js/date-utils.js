@@ -8,12 +8,22 @@
  * interprets it as UTC midnight, which can cause the date to shift by one day
  * when converted to local time. This function parses it as a local date instead.
  * 
- * @param {string} dateStr - Date string in YYYY-MM-DD format
+ * Also handles timestamps by extracting just the date part.
+ * 
+ * @param {string|null|undefined} dateStr - Date string in YYYY-MM-DD format or YYYY-MM-DD HH:MM:SS, can be null or undefined
  * @returns {Date|null} Date object or null if input is invalid
  */
 function parseLocalDate(dateStr) {
     if (!dateStr) return null;
-    const [year, month, day] = dateStr.split('-').map(Number);
+    
+    // Extract just the date part if it includes time (handle timestamps)
+    // Trim to handle potential whitespace
+    const datePart = dateStr.trim().split(' ')[0];
+    
+    const parts = datePart.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return null;
+    
+    const [year, month, day] = parts;
     return new Date(year, month - 1, day);
 }
 
