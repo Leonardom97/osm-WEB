@@ -591,6 +591,18 @@
             return;
         }
 
+        // Helper function to check if a value is empty (handles 0 as valid value)
+        function isEmpty(value) {
+            return !value && value !== 0;
+        }
+
+        // Helper function to escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Skip header row
         for (let i = 1; i < data.length; i++) {
             const row = data[i];
@@ -613,17 +625,17 @@
             const rol_nombre = row[4];
 
             // Validate required fields
-            if (!cargo_id && cargo_id !== 0) {
+            if (isEmpty(cargo_id)) {
                 errors.push(`Fila ${i + 1}: Cargo ID es obligatorio`);
                 continue;
             }
             
-            if (!sub_area && sub_area !== 0) {
+            if (isEmpty(sub_area)) {
                 errors.push(`Fila ${i + 1}: Sub Área ID es obligatorio`);
                 continue;
             }
             
-            if (!tema_id && tema_id !== 0) {
+            if (isEmpty(tema_id)) {
                 errors.push(`Fila ${i + 1}: Tema ID es obligatorio`);
                 continue;
             }
@@ -643,14 +655,15 @@
             // Convert and validate frecuencia
             const frecuenciaNum = parseInt(frecuencia);
             if (isNaN(frecuenciaNum) || frecuenciaNum < 1) {
-                errors.push(`Fila ${i + 1}: Frecuencia debe ser un número válido mayor a 0 (se usará 12 por defecto)`);
+                errors.push(`Fila ${i + 1}: Frecuencia debe ser un número válido mayor a 0`);
+                continue;
             }
 
             // Find rol ID by name
             const rol = roles.find(r => r.nombre.toLowerCase() === String(rol_nombre).trim().toLowerCase());
             
             if (!rol) {
-                errors.push(`Fila ${i + 1}: Rol "${rol_nombre}" no encontrado en la base de datos`);
+                errors.push(`Fila ${i + 1}: Rol "${escapeHtml(String(rol_nombre))}" no encontrado en la base de datos`);
                 continue;
             }
 
@@ -661,7 +674,7 @@
                 id_cargo: String(cargo_id).trim(),
                 sub_area: subAreaStr,
                 id_tema: temaIdNum,
-                frecuencia_meses: isNaN(frecuenciaNum) ? 12 : frecuenciaNum,
+                frecuencia_meses: frecuenciaNum,
                 id_rol_capacitador: rol.id
             };
 
@@ -672,11 +685,11 @@
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${cargo ? cargo.cargo : `<span class="text-warning">${cargo_id} (no encontrado)</span>`}</td>
-                <td>${subArea ? subArea.sub_area : `<span class="text-warning">${item.sub_area} (no encontrado)</span>`}</td>
-                <td>${tema ? tema.nombre : `<span class="text-warning">${tema_id} (no encontrado)</span>`}</td>
+                <td>${cargo ? escapeHtml(cargo.cargo) : `<span class="text-warning">${escapeHtml(String(cargo_id))} (no encontrado)</span>`}</td>
+                <td>${subArea ? escapeHtml(subArea.sub_area) : `<span class="text-warning">${escapeHtml(item.sub_area)} (no encontrado)</span>`}</td>
+                <td>${tema ? escapeHtml(tema.nombre) : `<span class="text-warning">${escapeHtml(String(tema_id))} (no encontrado)</span>`}</td>
                 <td>${item.frecuencia_meses}</td>
-                <td>${rol.nombre}</td>
+                <td>${escapeHtml(rol.nombre)}</td>
             `;
             preview.appendChild(tr);
 
