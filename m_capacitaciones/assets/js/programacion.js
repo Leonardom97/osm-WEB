@@ -12,6 +12,25 @@
     let editingId = null;
     let importData = [];
 
+    // Helper function to format dates without timezone offset issues
+    // Parses date string in local timezone to avoid UTC conversion issues
+    function formatDateLocal(dateString) {
+        if (!dateString) return null;
+        
+        // Parse date components to avoid timezone issues
+        // Date from DB is in format YYYY-MM-DD
+        const parts = dateString.split('T')[0].split('-');
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // months are 0-indexed
+        const day = parseInt(parts[2], 10);
+        
+        // Create date in local timezone
+        const date = new Date(year, month, day);
+        
+        // Format as local date string
+        return date.toLocaleDateString('es-CO');
+    }
+
     // Load HTML components (navbar and sidebar)
     async function includeComponent(file, selector) {
         try {
@@ -213,10 +232,10 @@
         tbody.innerHTML = data.map(prog => {
             // Format dates
             const fechaProxima = prog.fecha_proxima_capacitacion 
-                ? new Date(prog.fecha_proxima_capacitacion).toLocaleDateString('es-CO') 
+                ? formatDateLocal(prog.fecha_proxima_capacitacion) 
                 : '-';
             const fechaNotificacion = prog.fecha_notificacion_previa 
-                ? new Date(prog.fecha_notificacion_previa).toLocaleDateString('es-CO') 
+                ? formatDateLocal(prog.fecha_notificacion_previa) 
                 : '-';
             
             // Calculate days until next training
@@ -548,10 +567,15 @@
 
         // Check if XLSX library is loaded
         if (typeof XLSX === 'undefined') {
-            showAlert('Error: La librería XLSX no está cargada. Por favor, recargue la página.', 'danger');
+            showAlert('Error: La librería XLSX no está cargada. Por favor, recargue la página e intente nuevamente.', 'danger');
             console.error('XLSX library is not loaded');
             return;
         }
+
+        // Reset preview and errors
+        document.getElementById('importPreview').classList.add('d-none');
+        document.getElementById('importErrors').classList.add('d-none');
+        document.getElementById('btnImportar').disabled = true;
 
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -569,9 +593,18 @@
                 processExcelData(jsonData);
             } catch (error) {
                 console.error('Error reading Excel:', error);
-                showAlert('Error al leer el archivo Excel: ' + error.message, 'danger');
+                showAlert('Error al leer el archivo Excel: ' + error.message + '. Por favor, verifique que el archivo sea un Excel válido (.xlsx o .xls).', 'danger');
+                // Reset the file input so the user can try again
+                document.getElementById('inputExcel').value = '';
             }
         };
+        
+        reader.onerror = function(error) {
+            console.error('FileReader error:', error);
+            showAlert('Error al leer el archivo. Por favor, intente nuevamente.', 'danger');
+            document.getElementById('inputExcel').value = '';
+        };
+        
         reader.readAsArrayBuffer(file);
     }
 
@@ -583,13 +616,13 @@
 
         // Validate data
         if (!data || data.length === 0) {
-            showAlert('El archivo Excel está vacío o no tiene datos válidos', 'warning');
+            showAlert('El archivo Excel está vacío o no tiene datos válidos. Por favor, agregue datos al archivo y vuelva a intentar.', 'warning');
             document.getElementById('btnImportar').disabled = true;
             return;
         }
 
         if (data.length === 1) {
-            showAlert('El archivo solo contiene la fila de encabezado. Por favor agregue datos.', 'warning');
+            showAlert('El archivo solo contiene la fila de encabezado. Por favor agregue filas con datos y vuelva a intentar.', 'warning');
             document.getElementById('btnImportar').disabled = true;
             return;
         }
@@ -705,8 +738,16 @@
             const errorList = document.getElementById('importErrorList');
             errorList.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
             document.getElementById('importErrors').classList.remove('d-none');
+            
+            // Show summary message
+            if (importData.length === 0) {
+                showAlert(`No se pudieron procesar los datos del Excel. Se encontraron ${errors.length} error(es). Por favor, revise los errores y corrija el archivo.`, 'danger');
+            } else {
+                showAlert(`Se procesaron ${importData.length} fila(s) correctamente, pero hay ${errors.length} fila(s) con errores. Puede importar las filas correctas o corregir los errores primero.`, 'warning');
+            }
         } else {
             document.getElementById('importErrors').classList.add('d-none');
+            showAlert(`Se procesaron ${importData.length} fila(s) correctamente. Puede proceder con la importación.`, 'success');
         }
 
         document.getElementById('btnImportar').disabled = importData.length === 0;
