@@ -543,11 +543,23 @@
         const file = e.target.files[0];
         if (!file) return;
 
+        // Check if XLSX library is loaded
+        if (typeof XLSX === 'undefined') {
+            showAlert('Error: La librería XLSX no está cargada. Por favor, recargue la página.', 'danger');
+            console.error('XLSX library is not loaded');
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = function(event) {
             try {
                 const data = new Uint8Array(event.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
+                
+                if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+                    throw new Error('El archivo no contiene hojas válidas');
+                }
+                
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
@@ -565,6 +577,19 @@
         const errors = [];
         const preview = document.getElementById('importPreviewBody');
         preview.innerHTML = '';
+
+        // Validate data
+        if (!data || data.length === 0) {
+            showAlert('El archivo Excel está vacío o no tiene datos válidos', 'warning');
+            document.getElementById('btnImportar').disabled = true;
+            return;
+        }
+
+        if (data.length === 1) {
+            showAlert('El archivo solo contiene la fila de encabezado. Por favor agregue datos.', 'warning');
+            document.getElementById('btnImportar').disabled = true;
+            return;
+        }
 
         // Skip header row
         for (let i = 1; i < data.length; i++) {
