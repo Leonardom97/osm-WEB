@@ -5,7 +5,7 @@
  * Format dates without timezone offset issues
  * Parses date string in local timezone to avoid UTC conversion issues
  * 
- * @param {string} dateString - Date string in format YYYY-MM-DD
+ * @param {string} dateString - Date string in format YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS
  * @returns {string|null} Formatted date string in es-CO locale or null if input is empty
  * 
  * Problem: When JavaScript creates a date using new Date("2024-01-15"), 
