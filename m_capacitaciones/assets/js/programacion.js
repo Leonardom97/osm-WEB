@@ -390,6 +390,9 @@
             new bootstrap.Modal(document.getElementById('modalImport')).show();
         });
 
+        // Download template button
+        document.getElementById('btnDownloadTemplate').addEventListener('click', downloadTemplate);
+
         // Excel file input
         document.getElementById('inputExcel').addEventListener('change', handleExcelFile);
 
@@ -735,6 +738,56 @@
         } catch (error) {
             console.error('Error importing:', error);
             showAlert('Error al importar datos', 'danger');
+        }
+    }
+
+    function downloadTemplate() {
+        // Check if XLSX library is loaded
+        if (typeof XLSX === 'undefined') {
+            showAlert('Error: La librería XLSX no está cargada. Por favor, recargue la página.', 'danger');
+            console.error('XLSX library is not loaded');
+            return;
+        }
+
+        try {
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Create template data with headers and example rows
+            const templateData = [
+                ['Cargo ID', 'Sub Área ID', 'Tema ID', 'Frecuencia', 'Rol Capacitador'],
+                ['117', '003', 49, 12, 'Capacitador SIE'],
+                ['043', '016', 23, 12, 'Capacitador IND'],
+                ['068', '001', 47, 6, 'Capacitador SIE']
+            ];
+            
+            // Create worksheet from data
+            const ws = XLSX.utils.aoa_to_sheet(templateData);
+            
+            // Set column widths for better readability
+            ws['!cols'] = [
+                { wch: 12 },  // Cargo ID
+                { wch: 15 },  // Sub Área ID
+                { wch: 10 },  // Tema ID
+                { wch: 12 },  // Frecuencia
+                { wch: 20 }   // Rol Capacitador
+            ];
+            
+            // Add the worksheet to the workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'programacion');
+            
+            // Generate filename with current date
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+            const filename = `plantilla_programacion_${dateStr}.xlsx`;
+            
+            // Write the file
+            XLSX.writeFile(wb, filename);
+            
+            showAlert('Plantilla descargada exitosamente', 'success');
+        } catch (error) {
+            console.error('Error generating template:', error);
+            showAlert('Error al generar la plantilla: ' + error.message, 'danger');
         }
     }
 

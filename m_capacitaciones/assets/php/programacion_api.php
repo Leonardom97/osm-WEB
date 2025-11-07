@@ -223,24 +223,22 @@ try {
 
             foreach ($items as $index => $item) {
                 try {
-                    // Validate required fields
-                    if (empty($item['id_cargo']) || empty($item['id_tema']) || empty($item['id_rol_capacitador'])) {
+                    // Validate required fields including sub_area
+                    if (empty($item['id_cargo']) || empty($item['id_tema']) || empty($item['id_rol_capacitador']) || empty($item['sub_area'])) {
                         $errors[] = "Fila " . ($index + 1) . ": Campos requeridos faltantes";
                         continue;
                     }
 
-                    // Check if already exists
+                    // Check if already exists (sub_area is required, so no NULL check needed)
                     $checkStmt = $pg->prepare("
                         SELECT COUNT(*) FROM cap_programacion 
-                        WHERE id_cargo = ? AND id_tema = ? 
-                        AND (sub_area = ? OR (sub_area IS NULL AND ? IS NULL))
+                        WHERE id_cargo = ? AND id_tema = ? AND sub_area = ?
                         AND activo = true
                     ");
                     $checkStmt->execute([
                         $item['id_cargo'],
                         $item['id_tema'],
-                        $item['sub_area'] ?? null,
-                        $item['sub_area'] ?? null
+                        $item['sub_area']
                     ]);
                     
                     if ($checkStmt->fetchColumn() > 0) {
@@ -264,7 +262,7 @@ try {
                     $stmt->execute([
                         $item['id_tema'],
                         $item['id_cargo'],
-                        $item['sub_area'] ?? null,
+                        $item['sub_area'],  // sub_area is required, no null fallback
                         $frecuencia,
                         $item['id_rol_capacitador'],
                         $fecha_proxima,
