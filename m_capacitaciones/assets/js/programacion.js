@@ -754,6 +754,8 @@
             const wb = XLSX.utils.book_new();
             
             // Create template data with headers and example rows
+            // Note: These are example values for reference only
+            // Users should replace with actual IDs from their database
             const templateData = [
                 ['Cargo ID', 'Sub Área ID', 'Tema ID', 'Frecuencia', 'Rol Capacitador'],
                 ['117', '003', 49, 12, 'Capacitador SIE'],
@@ -774,6 +776,7 @@
             ];
             
             // Add the worksheet to the workbook
+            // Sheet name matches the expected format for import
             XLSX.utils.book_append_sheet(wb, ws, 'programacion');
             
             // Generate filename with current date
