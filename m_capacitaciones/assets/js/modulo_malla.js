@@ -141,11 +141,11 @@
             }
 
             const ultimaCapacitacion = record.ultima_capacitacion 
-                ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.ultima_capacitacion).toLocaleDateString('es-CO') 
                 : '-';
             
             const proximaCapacitacion = record.proxima_capacitacion 
-                ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.proxima_capacitacion).toLocaleDateString('es-CO') 
                 : '-';
 
             const diasRestantes = record.dias_restantes !== null ? record.dias_restantes : '-';
@@ -228,10 +228,10 @@
             'Tema': record.tema_nombre,
             'Frecuencia (meses)': record.frecuencia_meses,
             'Última Capacitación': record.ultima_capacitacion 
-                ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.ultima_capacitacion).toLocaleDateString('es-CO') 
                 : '-',
             'Próxima Capacitación': record.proxima_capacitacion 
-                ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.proxima_capacitacion).toLocaleDateString('es-CO') 
                 : '-',
             'Días Restantes': record.dias_restantes !== null ? record.dias_restantes : '-',
             'Rol Capacitador': record.rol_capacitador_nombre

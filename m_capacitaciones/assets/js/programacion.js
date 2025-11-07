@@ -136,7 +136,7 @@
             const colaboradoresCount = parseInt(alert.colaboradores_pendientes) || 0;
             
             const fechaProxima = alert.fecha_proxima_capacitacion 
-                ? new Date(alert.fecha_proxima_capacitacion).toLocaleDateString('es-CO')
+                ? parseLocalDate(alert.fecha_proxima_capacitacion).toLocaleDateString('es-CO')
                 : '-';
             
             return `
@@ -213,17 +213,17 @@
         tbody.innerHTML = data.map(prog => {
             // Format dates
             const fechaProxima = prog.fecha_proxima_capacitacion 
-                ? new Date(prog.fecha_proxima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(prog.fecha_proxima_capacitacion).toLocaleDateString('es-CO') 
                 : '-';
             const fechaNotificacion = prog.fecha_notificacion_previa 
-                ? new Date(prog.fecha_notificacion_previa).toLocaleDateString('es-CO') 
+                ? parseLocalDate(prog.fecha_notificacion_previa).toLocaleDateString('es-CO') 
                 : '-';
             
             // Calculate days until next training
             let diasPara = null;
             if (prog.fecha_proxima_capacitacion) {
-                const hoy = new Date();
-                const proxima = new Date(prog.fecha_proxima_capacitacion);
+                const hoy = getTodayAtMidnight();
+                const proxima = parseLocalDate(prog.fecha_proxima_capacitacion);
                 diasPara = Math.floor((proxima - hoy) / (1000 * 60 * 60 * 24));
             }
             

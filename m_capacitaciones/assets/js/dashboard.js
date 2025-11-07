@@ -310,11 +310,11 @@
             const situacion = `<span class="badge bg-info">${record.situacion || 'N/A'}</span>`;
 
             const ultimaCapacitacion = record.ultima_capacitacion 
-                ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.ultima_capacitacion).toLocaleDateString('es-CO') 
                 : '<span class="text-muted">Sin registro</span>';
             
             const proximaCapacitacion = record.proxima_capacitacion 
-                ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
+                ? parseLocalDate(record.proxima_capacitacion).toLocaleDateString('es-CO') 
                 : '<span class="text-muted">-</span>';
 
             const diasRestantes = record.dias_restantes !== null ? record.dias_restantes : '-';
@@ -514,16 +514,16 @@
                 // This is intentional as date range filtering only applies to completed trainings
                 if (!r.ultima_capacitacion) return false;
                 
-                const recordDate = new Date(r.ultima_capacitacion);
+                const recordDate = parseLocalDate(r.ultima_capacitacion);
                 let passes = true;
                 
                 if (fechaDesde) {
-                    const desde = new Date(fechaDesde);
+                    const desde = parseLocalDate(fechaDesde);
                     passes = passes && recordDate >= desde;
                 }
                 
                 if (fechaHasta) {
-                    const hasta = new Date(fechaHasta);
+                    const hasta = parseLocalDate(fechaHasta);
                     hasta.setHours(23, 59, 59, 999); // Include the entire end date
                     passes = passes && recordDate <= hasta;
                 }
@@ -584,10 +584,10 @@
                 'Tema': record.tema_nombre,
                 'Frecuencia (meses)': record.frecuencia_meses,
                 'Última Capacitación': record.ultima_capacitacion 
-                    ? new Date(record.ultima_capacitacion).toLocaleDateString('es-CO') 
+                    ? parseLocalDate(record.ultima_capacitacion).toLocaleDateString('es-CO') 
                     : '-',
                 'Próxima Capacitación': record.proxima_capacitacion 
-                    ? new Date(record.proxima_capacitacion).toLocaleDateString('es-CO') 
+                    ? parseLocalDate(record.proxima_capacitacion).toLocaleDateString('es-CO') 
                     : '-',
                 'Días Restantes': record.dias_restantes !== null ? record.dias_restantes : '-',
                 'Rol Capacitador': record.rol_capacitador_nombre
