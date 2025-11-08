@@ -43,7 +43,7 @@ BEGIN
     v_sub_area := NEW.sub_área;
     
     -- Skip if training was not approved
-    IF NEW.estado_aprovacion != 'aprobo' THEN
+    IF NEW.estado_aprobacion != 'aprobo' THEN
         RETURN NEW;
     END IF;
     

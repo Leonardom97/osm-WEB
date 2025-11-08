@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let asistente = {
             cedula: col.ac_cedula,
             nombre: [col.ac_nombre1, col.ac_nombre2, col.ac_apellido1, col.ac_apellido2].filter(Boolean).join(' '),
-            estado_aprovacion: estado,
+            estado_aprobacion: estado,
             empresa: col.empresa_nombre,
             cargo: col.cargo_nombre,
             area: col.area_nombre,
@@ -237,7 +237,7 @@ function actualizarTablaAsistentes() {
                 <td>${a.nombre}</td>
                 <td>${a.cedula}</td>
                 <td>${a.empresa}</td>
-                <td>${formatEstado(a.estado_aprovacion)}</td>
+                <td>${formatEstado(a.estado_aprobacion)}</td>
                 <td>
                     <button class="btn btn-danger" onclick="eliminarAsistente(${i})"><i class="fas fa-trash"></i></button>
                 </td>

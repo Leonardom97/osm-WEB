@@ -152,7 +152,7 @@ if ($action == 'get_select') {
 
     // Prepara la inserción de asistentes al formulario
     $stmt_asistente = $pg->prepare("INSERT INTO cap_formulario_asistente (
-            id_formulario, cedula, id_colaborador, estado_aprovacion, nombre, empresa, cargo, área, sub_área, rango, situacion
+            id_formulario, cedula, id_colaborador, estado_aprobacion, nombre, empresa, cargo, área, sub_área, rango, situacion
         ) VALUES (
             ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )");
@@ -196,7 +196,7 @@ if ($action == 'get_select') {
             $id_formulario,
             $asistente['cedula'],
             $id_colaborador,  // Puede ser NULL si no se encuentra
-            $asistente['estado_aprovacion'],
+            $asistente['estado_aprobacion'],
             $asistente['nombre'] ?? '',
             $asistente['empresa'] ?? '',
             $asistente['cargo'] ?? '',
