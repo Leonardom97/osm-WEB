@@ -19,7 +19,7 @@ This implementation adds automatic date tracking and role-based notifications to
 **Database Trigger:**
 - `actualizar_fechas_programacion()` - Automatically updates programacion dates when training is completed
 - Matches trainings by: tema, cargo, and sub_area
-- Only updates for approved attendees (`estado_aprovacion = 'aprobo'`)
+- Only updates for approved attendees (`estado_aprobacion = 'aprobo'`)
 
 ### 2. User Interface Updates
 
@@ -195,7 +195,7 @@ Use this checklist to verify everything works:
    ```sql
    SELECT * FROM pg_trigger WHERE tgname = 'trigger_actualizar_programacion';
    ```
-2. Asistente has estado_aprovacion = 'aprobo'
+2. Asistente has estado_aprobacion = 'aprobo'
 3. Cargo and sub_area match exactly with programacion
 4. Tema matches exactly
 
