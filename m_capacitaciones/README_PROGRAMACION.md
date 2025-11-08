@@ -125,7 +125,7 @@ id                  INT
 id_formulario       INT (referencia a cap_formulario)
 cedula              VARCHAR
 id_colaborador      INT (referencia a adm_colaboradores)
-estado_aprovacion   VARCHAR ('aprobo', 'no_aprobo', 'no_aplica')
+estado_aprobacion   VARCHAR ('aprobo', 'no_aprobo', 'no_aplica')
 cargo               VARCHAR (nombre del cargo)
 sub_área            VARCHAR (nombre de la sub-área)
 ...otros campos...
@@ -171,7 +171,7 @@ WHERE p.id_tema = [tema_del_formulario]
   AND p.id_cargo = [cargo_del_asistente]
   AND (p.sub_area = [sub_area_del_asistente] OR ambos son NULL)
   AND p.activo = true
-  AND asistente.estado_aprovacion = 'aprobo'
+  AND asistente.estado_aprobacion = 'aprobo'
 ```
 
 ### Frecuencia de Actualización

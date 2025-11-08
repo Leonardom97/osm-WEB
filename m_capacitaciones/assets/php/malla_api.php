@@ -62,7 +62,7 @@ try {
                     FROM cap_formulario_asistente fa
                     INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                     LEFT JOIN adm_colaboradores c ON fa.cedula = c.ac_cedula AND fa.id_colaborador IS NULL
-                    WHERE fa.estado_aprovacion = 'aprobo'
+                    WHERE fa.estado_aprobacion = 'aprobo'
                     GROUP BY COALESCE(fa.id_colaborador, c.ac_id), f.id_tema
                 )
                 SELECT 
@@ -145,7 +145,7 @@ try {
                     FROM cap_formulario_asistente fa
                     INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                     LEFT JOIN adm_colaboradores c ON fa.cedula = c.ac_cedula AND fa.id_colaborador IS NULL
-                    WHERE fa.estado_aprovacion = 'aprobo'
+                    WHERE fa.estado_aprobacion = 'aprobo'
                     GROUP BY COALESCE(fa.id_colaborador, c.ac_id), f.id_tema
                 ),
                 estados AS (
@@ -214,7 +214,7 @@ try {
                     FROM cap_formulario_asistente fa
                     INNER JOIN cap_formulario f ON fa.id_formulario = f.id
                     INNER JOIN colaborador_info ci ON (fa.id_colaborador = ci.ac_id OR fa.cedula = ci.ac_cedula)
-                    WHERE fa.estado_aprovacion = 'aprobo'
+                    WHERE fa.estado_aprobacion = 'aprobo'
                     GROUP BY f.id_tema
                 )
                 SELECT 

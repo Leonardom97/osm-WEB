@@ -166,7 +166,7 @@
                 <td><small>${formatDateForTable(training.fecha)}</small></td>
                 <td><small>${formatTimeForTable(training.hora_inicio)}</small></td>
                 <td><small>${formatTimeForTable(training.hora_fin)}</small></td>
-                <td><small>${formatEstadoAprobacion(training.estado_aprovacion)}</small></td>
+                <td><small>${formatEstadoAprobacion(training.estado_aprobacion)}</small></td>
                 <td><small>${training.empresa || '-'}</small></td>
                 <td><small>${training.cargo || '-'}</small></td>
                 <td><small>${training.area || '-'}</small></td>
@@ -299,7 +299,7 @@
                 'Fecha': formatDateForTable(training.fecha),
                 'Hora Inicio': training.hora_inicio || '',
                 'Hora Fin': training.hora_fin || '',
-                'Estado Aprobación': formatEstadoAprobacion(training.estado_aprovacion),
+                'Estado Aprobación': formatEstadoAprobacion(training.estado_aprobacion),
                 'Empresa': training.empresa || '',
                 'Cargo': training.cargo || '',
                 'Área': training.area || '',

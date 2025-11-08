@@ -131,7 +131,7 @@ BEGIN
         INSERT INTO cap_formulario_asistente (
             id_formulario,
             cedula,
-            estado_aprovacion,
+            estado_aprobacion,
             nombre,
             empresa,
             cargo,

@@ -2197,7 +2197,7 @@ CREATE TABLE "public"."cap_formulario_asistente" (
   "id" int4 NOT NULL DEFAULT nextval('formulario_asistente_id_seq'::regclass),
   "id_formulario" int4 NOT NULL,
   "cedula" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-  "estado_aprovacion" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+  "estado_aprobacion" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "nombre" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "empresa" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
   "cargo" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,

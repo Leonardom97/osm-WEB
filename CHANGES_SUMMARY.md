@@ -100,7 +100,7 @@ The `cap_programacion` table should have:
 The `cap_formulario_asistente` table tracks:
 - `id_colaborador` - Reference to employee
 - `id_formulario` - Reference to training form
-- `estado_aprovacion` - Whether the employee passed ('aprobo')
+- `estado_aprobacion` - Whether the employee passed ('aprobo')
 
 The `cap_formulario` table tracks:
 - `id_tema` - Which training topic

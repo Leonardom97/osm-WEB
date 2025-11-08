@@ -37,7 +37,7 @@
 │  │• tema           │      │• tema (indirect)        │ │
 │  │• cargo          │◄─────┤• cargo                  │ │
 │  │• sub_area       │Match │• sub_area               │ │
-│  │• frequency      │      │• estado_aprovacion      │ │
+│  │• frequency      │      │• estado_aprobacion      │ │
 │  │• dates          │      └─────────────────────────┘ │
 │  └─────────────────┘                ▲                 │
 │           ▲                          │                 │
@@ -126,7 +126,7 @@ USER ACTION: Complete Training in formulario.html
 │       WHERE tema = 45                                   │
 │         AND cargo = '116'                               │
 │         AND sub_area = 'CLIPA - SISTEMAS'               │
-│         AND estado_aprovacion = 'aprobo'                │
+│         AND estado_aprobacion = 'aprobo'                │
 │    e) Update dates:                                     │
 │       • fecha_ultima: 2024-12-15                        │
 │       • fecha_proxima: 2025-12-15                       │
@@ -200,7 +200,7 @@ New Training Completed
 ```
 ┌─────────────────────────────────────────────┐
 │ New attendee inserted in formulario         │
-│ estado_aprovacion = 'aprobo'                │
+│ estado_aprobacion = 'aprobo'                │
 └─────────────────┬───────────────────────────┘
                   │
                   ▼
@@ -340,7 +340,7 @@ BEGIN
     sub_area = NEW.sub_área;
     
     -- Step 4: Only process if approved
-    IF NEW.estado_aprovacion != 'aprobo' THEN
+    IF NEW.estado_aprobacion != 'aprobo' THEN
         RETURN NEW;
     END IF;
     

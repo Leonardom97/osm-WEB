@@ -96,7 +96,7 @@ id                  INT
 id_formulario       INT (referencia a cap_formulario)
 cedula              VARCHAR
 id_colaborador      INT (referencia a adm_colaboradores)
-estado_aprovacion   VARCHAR ('aprobo', 'no_aprobo', 'no_aplica')
+estado_aprobacion   VARCHAR ('aprobo', 'no_aprobo', 'no_aplica')
 cargo               VARCHAR
 sub_área            VARCHAR
 ```

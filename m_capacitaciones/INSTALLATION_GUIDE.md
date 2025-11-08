@@ -274,7 +274,7 @@ FROM (
         SELECT fa.id_colaborador, f.id_tema, MAX(f.fecha) AS ultima_fecha
         FROM cap_formulario_asistente fa
         INNER JOIN cap_formulario f ON fa.id_formulario = f.id
-        WHERE fa.estado_aprovacion = 'aprobo'
+        WHERE fa.estado_aprobacion = 'aprobo'
         GROUP BY fa.id_colaborador, f.id_tema
     ) uc ON c.ac_id = uc.id_colaborador AND p.id_tema = uc.id_tema
     WHERE c.ac_id_situación IN ('A', 'V', 'P')
@@ -287,7 +287,7 @@ SELECT
     f.fecha,
     t.nombre AS tema,
     COUNT(fa.id) AS asistentes,
-    COUNT(CASE WHEN fa.estado_aprovacion = 'aprobo' THEN 1 END) AS aprobados
+    COUNT(CASE WHEN fa.estado_aprobacion = 'aprobo' THEN 1 END) AS aprobados
 FROM cap_formulario f
 LEFT JOIN cap_tema t ON f.id_tema = t.id
 LEFT JOIN cap_formulario_asistente fa ON fa.id_formulario = f.id

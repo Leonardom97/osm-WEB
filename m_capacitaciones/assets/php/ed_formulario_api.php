@@ -162,9 +162,9 @@ if ($action === 'buscar_colaborador') {
 if ($action === 'agregar_asistente') {
     $id_formulario = intval($_POST['id_formulario'] ?? 0);
     $cedula = $_POST['cedula'] ?? '';
-    $estado_aprovacion = $_POST['estado_aprovacion'] ?? '';
+    $estado_aprobacion = $_POST['estado_aprobacion'] ?? '';
 
-    if ($estado_aprovacion === '') {
+    if ($estado_aprobacion === '') {
         respond(['error' => 'Debes seleccionar estado de aprobación']);
     }
 
@@ -199,10 +199,10 @@ if ($action === 'agregar_asistente') {
 
     $pg->prepare("
         INSERT INTO cap_formulario_asistente (
-            id_formulario, cedula, estado_aprovacion, nombre, empresa, cargo, área, sub_área, rango, situacion
+            id_formulario, cedula, estado_aprobacion, nombre, empresa, cargo, área, sub_área, rango, situacion
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ")->execute([
-        $id_formulario, $cedula, $estado_aprovacion, $nombre, $empresa,
+        $id_formulario, $cedula, $estado_aprobacion, $nombre, $empresa,
         $cargoRow['cargo'], $areaRow['area'], $areaRow['sub_area'], $cargoRow['rango_cargo'], $situacion
     ]);
 
