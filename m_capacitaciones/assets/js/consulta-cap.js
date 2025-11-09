@@ -31,7 +31,7 @@ function filtrarDatos() {
     return Object.keys(filtros).every(col => {
       if (!filtros[col]) return true;
       
-      // Special handling for the "registrado_por" column
+      // Manejo especial para la columna "registrado_por"
       if (col === 'registrado_por') {
         const searchText = filtros[col].toLowerCase();
         const creado = (row.creado_por_nombre || '').toLowerCase();
@@ -39,7 +39,7 @@ function filtrarDatos() {
         return creado.includes(searchText) || editado.includes(searchText);
       }
       
-      // Regular column filtering
+      // Filtrado de columnas regular
       return row[col] && row[col].toString().toLowerCase().includes(filtros[col].toLowerCase());
     });
   }).sort((a, b) => {
@@ -47,7 +47,7 @@ function filtrarDatos() {
     
     let va, vb;
     
-    // Special handling for sorting by "registrado_por"
+    // Manejo especial para ordenar por "registrado_por"
     if (sortCol === 'registrado_por') {
       va = a.creado_por_nombre || '';
       vb = b.creado_por_nombre || '';
@@ -66,7 +66,7 @@ function filtrarDatos() {
 }
 
 function renderTabla() {
-  // Try new structure first, fallback to old structure for compatibility
+  // Intentar nueva estructura primero, usar estructura antigua para compatibilidad
   let tbody = document.querySelector('#tabla-capacitaciones tbody');
   if (!tbody) {
     tbody = document.querySelector('#tabla tbody');
@@ -87,7 +87,7 @@ function renderTabla() {
     const tr = document.createElement('tr');
     if (seleccionados.has(idStr)) tr.classList.add('selected');
     
-    // Build the "Registrado por" cell content
+    // Construir el contenido de la celda "Registrado por"
     let registradoPor = '';
     if (row.creado_por_nombre) {
       registradoPor = 'Creado por: ' + row.creado_por_nombre;
@@ -134,7 +134,7 @@ function renderBootstrapPagination(total) {
     return;
   }
 
-  // Previous button
+  // Botón Anterior
   const prevLi = document.createElement('li');
   prevLi.className = (pagNav.id === 'pagination-capacitaciones' ? 'md-page-item' : 'page-item') + (pagina === 1 ? ' disabled' : '');
   const prevA = document.createElement('a');
@@ -149,21 +149,21 @@ function renderBootstrapPagination(total) {
   prevLi.appendChild(prevA);
   pagUl.appendChild(prevLi);
 
-  // Calculate page numbers to show (max 7)
+  // Calcular números de página a mostrar (máximo 7)
   let startPage = 1;
   let endPage = totalPaginas;
   
   if (totalPaginas > 7) {
     if (pagina <= 4) {
-      // Near the beginning: show 1 2 3 4 5 ... last
+      // Cerca del inicio: mostrar 1 2 3 4 5 ... último
       startPage = 1;
       endPage = 5;
     } else if (pagina >= totalPaginas - 3) {
-      // Near the end: show 1 ... N-4 N-3 N-2 N-1 N
+      // Cerca del final: mostrar 1 ... N-4 N-3 N-2 N-1 N
       startPage = totalPaginas - 4;
       endPage = totalPaginas;
     } else {
-      // In the middle: show 1 ... current-1 current current+1 ... last
+      // En el medio: mostrar 1 ... actual-1 actual actual+1 ... último
       startPage = pagina - 1;
       endPage = pagina + 1;
     }
@@ -172,7 +172,7 @@ function renderBootstrapPagination(total) {
   const itemClass = pagNav.id === 'pagination-capacitaciones' ? 'md-page-item' : 'page-item';
   const linkClass = pagNav.id === 'pagination-capacitaciones' ? 'md-page-link' : 'page-link';
   
-  // First page button if not in range
+  // Botón primera página si no está en el rango
   if (startPage > 1) {
     const li = document.createElement('li');
     li.className = itemClass;
@@ -188,7 +188,7 @@ function renderBootstrapPagination(total) {
     li.appendChild(a);
     pagUl.appendChild(li);
     
-    // Add ellipsis if there's a gap
+    // Agregar puntos suspensivos si hay una brecha
     if (startPage > 2) {
       const ellipsisLi = document.createElement('li');
       ellipsisLi.className = itemClass + ' disabled';
@@ -201,7 +201,7 @@ function renderBootstrapPagination(total) {
     }
   }
 
-  // Page numbers
+  // Números de página
   for(let i=startPage; i<=endPage; i++) {
     const li = document.createElement('li');
     li.className = itemClass + (i === pagina ? ' active' : '');
@@ -218,9 +218,9 @@ function renderBootstrapPagination(total) {
     pagUl.appendChild(li);
   }
 
-  // Last page button if not in range
+  // Botón última página si no está en el rango
   if (endPage < totalPaginas) {
-    // Add ellipsis if there's a gap
+    // Agregar puntos suspensivos si hay una brecha
     if (endPage < totalPaginas - 1) {
       const ellipsisLi = document.createElement('li');
       ellipsisLi.className = itemClass + ' disabled';
@@ -247,7 +247,7 @@ function renderBootstrapPagination(total) {
     pagUl.appendChild(li);
   }
 
-  // Next button
+  // Botón Siguiente
   const nextLi = document.createElement('li');
   nextLi.className = itemClass + (pagina === totalPaginas ? ' disabled' : '');
   const nextA = document.createElement('a');
@@ -327,7 +327,7 @@ if (limitSelectEl) {
   });
 }
 
-// Dropdown logic (old structure)
+// Lógica de dropdown (estructura antigua)
 const downloadBtn = document.getElementById('downloadBtn');
 const menu = document.getElementById('dropdownContent');
 if (downloadBtn && menu) {
@@ -343,7 +343,7 @@ if (downloadBtn && menu) {
   });
 }
 
-// Export button for new tab structure
+// Botón de exportar para la nueva estructura de pestañas
 const exportBtnCapacitaciones = document.getElementById('exportBtnCapacitaciones');
 if (exportBtnCapacitaciones) {
   exportBtnCapacitaciones.addEventListener('click', function(e){
@@ -394,7 +394,7 @@ function descargarXLSX(tipo){
     [
       'id','Capacitador','Cédula','Tema','Lugar','Actividad','Proceso','Fecha',
       'hora inicio','hora final','duracion total','observaciones','total asistentes',
-      'aprovados','no aprovados','creado por','editado por'
+      'aprobados','no aprobados','creado por','editado por'
     ]
   ];
   filas.forEach(row=>{
@@ -425,7 +425,7 @@ function descargarXLSX(tipo){
   XLSX.writeFile(wb, `capacitaciones_${tipo}.xlsx`);
 }
 
-// Dropdown options (old structure)
+// Opciones de dropdown (estructura antigua)
 const downloadAllBtn = document.getElementById('downloadAll');
 const downloadFilteredBtn = document.getElementById('downloadFiltered');
 const downloadSelectedBtn2 = document.getElementById('downloadSelected');
