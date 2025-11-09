@@ -6,6 +6,13 @@ session_start();
 require_once __DIR__ . '/../../../php/db_postgres.php';
 header('Content-Type: application/json');
 
+// Validar que existe una sesión activa
+if (!isset($_SESSION['usuario_id'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Sesión no iniciada. Por favor inicie sesión.']);
+    exit;
+}
+
 /* Helper simple para devolver JSON y terminar */
 function respond($data) {
     echo json_encode($data);

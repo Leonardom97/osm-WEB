@@ -6,6 +6,14 @@
 session_start();
 require '../../../php/db_postgres.php'; // incluye conexión $pg
 
+// Validar que existe una sesión activa
+if (!isset($_SESSION['usuario_id'])) {
+    header('Content-Type: application/json');
+    http_response_code(401);
+    echo json_encode(['error' => 'Sesión no iniciada. Por favor inicie sesión.']);
+    exit;
+}
+
 // Obtiene la acción enviada por GET o POST
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
