@@ -1,5 +1,14 @@
 <?php
+session_start();
 require_once __DIR__ . '/../../php/db_postgres.php';
+
+// Validar que existe una sesión activa
+if (!isset($_SESSION['usuario_id'])) {
+    header('Content-Type: application/json');
+    http_response_code(401);
+    echo json_encode(['error' => 'Sesión no iniciada. Por favor inicie sesión.']);
+    exit;
+}
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
