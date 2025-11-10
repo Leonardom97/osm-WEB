@@ -16,10 +16,19 @@ Thumbs.db
 # Logs
 *.log
 /tmp/
+logs/
+/php/logs/
 
 # PHP
 vendor/
 composer.phar
+
+# Environment & Secrets
+.env
+.env.local
+.env.production
+config.local.php
+secrets.php
 
 # Database
 *.sql

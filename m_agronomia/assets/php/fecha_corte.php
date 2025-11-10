@@ -3,8 +3,8 @@
 // Endpoint que depende exclusivamente de la sesión PHP y del rol en $_SESSION.
 // NO aceptar headers como fuente de rol en producción.
 
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
+// Apply security headers
+require_once __DIR__ . '/../../../php/security_headers.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();

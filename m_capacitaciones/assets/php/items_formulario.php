@@ -12,9 +12,10 @@
 //  - nombre (para add/update)
 // Responde JSON similar a los scripts originales.
 
+// Apply security headers
+require_once __DIR__ . '/../../../php/security_headers.php';
+
 header('Content-Type: application/json; charset=utf-8');
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
 
 /* Helpers básicos para responder y registrar */
 function respond($d){ echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; }

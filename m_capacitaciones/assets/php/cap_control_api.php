@@ -3,11 +3,12 @@
 // API para proporcionar listas de temas, procesos, lugares y tipos de actividad
 // Usado por items_formularios.js para cargar las tablas dinámicas
 
+// Apply security headers
+require_once __DIR__ . '/../../../php/security_headers.php';
+
 session_start();
 
 header('Content-Type: application/json; charset=utf-8');
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
 
 // Validar que existe una sesión activa
 if (!isset($_SESSION['usuario_id'])) {

@@ -1,4 +1,7 @@
 <?php
+// Apply security headers
+require_once __DIR__ . '/../../php/security_headers.php';
+
 session_start();
 require_once __DIR__ . '/../../php/db_postgres.php';
 
@@ -9,9 +12,6 @@ if (!isset($_SESSION['usuario_id'])) {
     echo json_encode(['error' => 'Sesión no iniciada. Por favor inicie sesión.']);
     exit;
 }
-
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
 // GET: consultar roles, siguiente id, usuarios
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
