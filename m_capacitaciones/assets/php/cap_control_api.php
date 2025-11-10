@@ -3,9 +3,18 @@
 // API para proporcionar listas de temas, procesos, lugares y tipos de actividad
 // Usado por items_formularios.js para cargar las tablas dinámicas
 
+session_start();
+
 header('Content-Type: application/json; charset=utf-8');
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
+
+// Validar que existe una sesión activa
+if (!isset($_SESSION['usuario_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Sesión no iniciada. Por favor inicie sesión.']);
+    exit;
+}
 
 // Función para responder JSON y terminar
 function respond($data) {

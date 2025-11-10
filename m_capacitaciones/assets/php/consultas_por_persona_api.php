@@ -3,9 +3,16 @@ header('Content-Type: application/json');
 session_start();
 require_once(__DIR__ . '/../../../php/db_postgres.php');
 
+// Validar que existe una sesión activa
+if (!isset($_SESSION['usuario_id'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Sesión no iniciada. Por favor inicie sesión.']);
+    exit;
+}
+
 $sql = "
 WITH capacitaciones_realizadas AS (
-  -- Count distinct trainings attended by each employee
+  -- Contar capacitaciones distintas asistidas por cada empleado
   SELECT 
     fa.cedula,
     COUNT(DISTINCT fa.id_formulario) as total_realizadas
@@ -14,7 +21,7 @@ WITH capacitaciones_realizadas AS (
   GROUP BY fa.cedula
 ),
 capacitaciones_programadas AS (
-  -- Count programmed trainings per employee based on their position and sub-area
+  -- Contar capacitaciones programadas por empleado según su cargo y sub-área
   SELECT 
     ac.ac_cedula as cedula,
     COUNT(DISTINCT cp.id) as total_programadas
@@ -26,7 +33,7 @@ capacitaciones_programadas AS (
   GROUP BY ac.ac_cedula
 ),
 capacitaciones_pendientes AS (
-  -- Calculate pending trainings: programmed but not yet completed or not meeting frequency
+  -- Calcular capacitaciones pendientes: programadas pero no completadas o que no cumplen frecuencia
   SELECT 
     ac.ac_cedula as cedula,
     COUNT(DISTINCT cp.id) as total_pendientes
