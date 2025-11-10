@@ -3,6 +3,9 @@
 // API para manejar selects, búsqueda de usuarios/colaboradores, guardado de formularios y relaciones.
 // Este archivo se coloca en assets/php/formulario_api.php (según uso desde JS del front-end).
 
+// Apply security headers
+require_once __DIR__ . '/../../../php/security_headers.php';
+
 session_start();
 require '../../../php/db_postgres.php'; // incluye conexión $pg
 
@@ -30,11 +33,36 @@ function jsonResponse($data) {
    Para tablas cap_* filtra por estado = 0 (activo).
 */
 if ($action == 'get_select') {
-    $tabla = $_GET['tabla'];
-    $col = $_GET['col'];
+    $tabla = $_GET['tabla'] ?? '';
+    $col = $_GET['col'] ?? '';
+    
+    // SECURITY: Whitelist of allowed tables and columns to prevent SQL injection
+    $allowedTables = [
+        'cap_proceso' => ['proceso'],
+        'cap_tema' => ['tema'],
+        'cap_lugar' => ['lugar'],
+        'cap_tipo_actividad' => ['tipo_actividad'],
+        'adm_roles' => ['nombre'],
+        'adm_empresa' => ['emp_nombre'],
+        'adm_cargos' => ['cargo'],
+        'adm_área' => ['area', 'sub_area']
+    ];
+    
+    // Validate table exists in whitelist
+    if (!isset($allowedTables[$tabla])) {
+        http_response_code(400);
+        jsonResponse(['error' => 'Tabla no permitida']);
+    }
+    
+    // Validate column exists in whitelist for this table
+    if (!in_array($col, $allowedTables[$tabla])) {
+        http_response_code(400);
+        jsonResponse(['error' => 'Columna no permitida para esta tabla']);
+    }
 
     // Solo muestra registros con estado = 0 para ciertas tablas específicas
     if (in_array($tabla, ['cap_proceso', 'cap_tema', 'cap_lugar', 'cap_tipo_actividad'])) {
+        // Safe to use $tabla and $col now as they are validated against whitelist
         $stmt = $pg->prepare("SELECT id, \"$col\" FROM \"$tabla\" WHERE estado = 0 ORDER BY \"$col\" ASC");
         $stmt->execute();
         $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -42,7 +70,9 @@ if ($action == 'get_select') {
         
     } else {
         // Para otras tablas, muestra todos los registros
-        $stmt = $pg->query("SELECT id, \"$col\" FROM \"$tabla\" ORDER BY \"$col\" ASC");
+        // Safe to use $tabla and $col now as they are validated against whitelist
+        $stmt = $pg->prepare("SELECT id, \"$col\" FROM \"$tabla\" ORDER BY \"$col\" ASC");
+        $stmt->execute();
         $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         jsonResponse($datos);
     }
