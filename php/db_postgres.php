@@ -3,11 +3,14 @@ if (basename(__FILE__) == basename($_SERVER['SCRIPT_FILENAME'])) {
     http_response_code(403); exit('Acceso prohibido');
 }
 
-$host = 'localhost';
-$db   = 'osm2';
-$user = 'postgres';
-$pass = '12345';
-$port = '5432';
+// Load configuration
+require_once __DIR__ . '/config.php';
+
+$host = DB_PG_HOST;
+$db   = DB_PG_NAME;
+$user = DB_PG_USER;
+$pass = DB_PG_PASSWORD;
+$port = DB_PG_PORT;
 
 try {
     $dsn = "pgsql:host=$host;port=$port;dbname=$db";
@@ -16,5 +19,13 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
 } catch (PDOException $e) {
-    die("Error al conectar a PostgreSQL: " . $e->getMessage());
+    // Log error securely without exposing details
+    error_log("PostgreSQL connection error: " . $e->getMessage());
+    
+    // Don't expose database details in error message
+    if (ENABLE_DEBUG) {
+        die("Error al conectar a PostgreSQL: " . $e->getMessage());
+    } else {
+        die("Error al conectar a la base de datos. Contacte al administrador.");
+    }
 }
