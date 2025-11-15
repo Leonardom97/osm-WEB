@@ -17,6 +17,17 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarSelect('t-actividad', 'cap_tipo_actividad', 'nombre');
     cargarSelect('tema-a', 'cap_tema', 'nombre');
 
+    // Event listener para filtrar temas cuando se selecciona un proceso
+    document.getElementById('proceso').addEventListener('change', function() {
+        const procesoId = this.value;
+        if (procesoId) {
+            cargarTemasporProceso(procesoId);
+        } else {
+            // Si no hay proceso seleccionado, cargar todos los temas
+            cargarSelect('tema-a', 'cap_tema', 'nombre');
+        }
+    });
+
     // Arreglo global de asistentes que se va actualizando desde el modal
     window.asistentes = [];
 
@@ -291,4 +302,34 @@ function uploadFile(formularioId, file, callback) {
         console.error('Error de red al subir archivo:', err);
         callback(false);
     });
+}
+
+// Función para cargar temas filtrados por proceso
+function cargarTemasporProceso(procesoId) {
+    fetch('assets/php/proceso_tema_api.php?action=get_temas_by_proceso&id_proceso=' + procesoId)
+        .then(res => res.json())
+        .then(data => {
+            let select = document.getElementById('tema-a');
+            if (!select) return;
+            
+            if (data.success && Array.isArray(data.temas)) {
+                if (data.temas.length === 0) {
+                    select.innerHTML = '<option value="">No hay temas para este proceso</option>';
+                } else {
+                    select.innerHTML = '<option value="">Seleccione...</option>';
+                    data.temas.forEach(tema => {
+                        select.innerHTML += `<option value="${tema.id}">${tema.nombre}</option>`;
+                    });
+                }
+            } else {
+                select.innerHTML = '<option value="">Error al cargar temas</option>';
+            }
+        })
+        .catch(err => {
+            console.error('Error cargando temas por proceso:', err);
+            let select = document.getElementById('tema-a');
+            if (select) {
+                select.innerHTML = '<option value="">Error al cargar temas</option>';
+            }
+        });
 }

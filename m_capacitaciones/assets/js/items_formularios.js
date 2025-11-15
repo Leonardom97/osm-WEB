@@ -576,9 +576,213 @@
     }
   }
 
+  // ---------- Proceso-Tema Relationship Functions ----------
+  const API_PROCESO_TEMA = API_BASE + '/proceso_tema_api.php';
+
+  // Load proceso-tema relationships
+  async function loadProcesoTemaRelations() {
+    try {
+      const res = await fetch(API_PROCESO_TEMA + '?action=list', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const tbody = document.querySelector('#procesoTemaTable tbody');
+      const countEl = document.getElementById('procesoTemaCount');
+      if (!tbody) return;
+      
+      if (!data.success || !Array.isArray(data.relations)) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay relaciones</td></tr>';
+        if (countEl) countEl.textContent = '0';
+        return;
+      }
+
+      const list = data.relations.slice().sort((a,b)=> (Number(a.id)||0) - (Number(b.id)||0));
+      tbody.innerHTML = list.map(r => {
+        const isActive = r.activo === true || r.activo === 't' || r.activo === 1;
+        return `
+        <tr data-id="${escapeHtml(r.id)}" class="${isActive ? '' : 'row-inactive'}">
+          <td>${escapeHtml(r.id)}</td>
+          <td>${escapeHtml(r.proceso_nombre)}</td>
+          <td>${escapeHtml(r.tema_nombre)}</td>
+          <td class="text-center">
+            <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}">${isActive ? 'Activo' : 'Inactivo'}</span>
+          </td>
+          <td class="text-center">
+            <button class="btn btn-sm p-0 border-0 btn-toggle-proceso-tema icon-btn" data-id="${escapeHtml(r.id)}" data-active="${isActive?1:0}" title="${isActive ? 'Desactivar' : 'Activar'}" aria-label="${isActive ? 'Desactivar' : 'Activar'}">
+              <span class="toggle-switch ${isActive ? 'on' : 'off'}" aria-hidden="true">
+                <span class="knob"></span>
+              </span>
+            </button>
+            <button class="btn btn-sm btn-outline-danger icon-btn btn-delete-proceso-tema ms-2" data-id="${escapeHtml(r.id)}" title="Eliminar">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `}).join('');
+      if (countEl) countEl.textContent = list.length;
+    } catch (err) {
+      console.error('Error loading proceso-tema relations:', err);
+      showToast('Error al cargar relaciones', true);
+    }
+  }
+
+  // Load procesos for dropdown
+  async function loadProcesosDropdown() {
+    try {
+      const res = await fetch(API_PROCESO_TEMA + '?action=get_procesos', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const select = document.getElementById('newRelacionProceso');
+      if (!select) return;
+      
+      if (data.success && Array.isArray(data.procesos)) {
+        select.innerHTML = '<option value="">Seleccione proceso...</option>' +
+          data.procesos.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.nombre)}</option>`).join('');
+      }
+    } catch (err) {
+      console.error('Error loading procesos dropdown:', err);
+    }
+  }
+
+  // Load temas for dropdown
+  async function loadTemasDropdown() {
+    try {
+      const res = await fetch(API_PROCESO_TEMA + '?action=get_all_temas', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const select = document.getElementById('newRelacionTema');
+      if (!select) return;
+      
+      if (data.success && Array.isArray(data.temas)) {
+        select.innerHTML = '<option value="">Seleccione tema...</option>' +
+          data.temas.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.nombre)}</option>`).join('');
+      }
+    } catch (err) {
+      console.error('Error loading temas dropdown:', err);
+    }
+  }
+
+  // Add proceso-tema relationship
+  async function addProcesoTemaRelation() {
+    const procesoSelect = document.getElementById('newRelacionProceso');
+    const temaSelect = document.getElementById('newRelacionTema');
+    if (!procesoSelect || !temaSelect) return;
+    
+    const id_proceso = procesoSelect.value;
+    const id_tema = temaSelect.value;
+    
+    if (!id_proceso || !id_tema) {
+      showToast('Seleccione proceso y tema', true);
+      return;
+    }
+    
+    try {
+      const res = await postJsonWithFormFallback(API_PROCESO_TEMA, {
+        action: 'add',
+        id_proceso: parseInt(id_proceso, 10),
+        id_tema: parseInt(id_tema, 10)
+      });
+      
+      if (res.success) {
+        procesoSelect.value = '';
+        temaSelect.value = '';
+        showToast('Relación agregada correctamente');
+        loadProcesoTemaRelations();
+      } else {
+        showToast(res.error || 'Error al agregar relación', true);
+      }
+    } catch (err) {
+      console.error('addProcesoTemaRelation error:', err);
+      showToast(err.message || 'Error al agregar relación', true);
+    }
+  }
+
+  // Toggle proceso-tema relationship status
+  async function toggleProcesoTemaStatus(id, btn) {
+    try {
+      const res = await postJsonWithFormFallback(API_PROCESO_TEMA, {
+        action: 'toggle',
+        id: parseInt(id, 10)
+      });
+      
+      if (res.success) {
+        showToast('Estado actualizado');
+        loadProcesoTemaRelations();
+      } else {
+        showToast(res.error || 'Error al actualizar estado', true);
+      }
+    } catch (err) {
+      console.error('toggleProcesoTemaStatus error:', err);
+      showToast(err.message || 'Error al actualizar estado', true);
+    }
+  }
+
+  // Delete proceso-tema relationship
+  async function deleteProcesoTemaRelation(id) {
+    if (!confirm('¿Está seguro de eliminar esta relación?')) return;
+    
+    try {
+      const res = await postJsonWithFormFallback(API_PROCESO_TEMA, {
+        action: 'delete',
+        id: parseInt(id, 10)
+      });
+      
+      if (res.success) {
+        showToast('Relación eliminada');
+        loadProcesoTemaRelations();
+      } else {
+        showToast(res.error || 'Error al eliminar relación', true);
+      }
+    } catch (err) {
+      console.error('deleteProcesoTemaRelation error:', err);
+      showToast(err.message || 'Error al eliminar relación', true);
+    }
+  }
+
+  // Update DOMContentLoaded to include proceso-tema functionality
+  const originalDOMContentLoaded = document.addEventListener;
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Bind proceso-tema add button
+    document.getElementById('addProcesoTemaBtn')?.addEventListener('click', addProcesoTemaRelation);
+    
+    // Delegated events for proceso-tema buttons
+    document.body.addEventListener('click', function(e) {
+      const btnToggle = e.target.closest('.btn-toggle-proceso-tema');
+      if (btnToggle) {
+        const id = btnToggle.dataset.id;
+        if (!id) return;
+        toggleProcesoTemaStatus(id, btnToggle);
+        return;
+      }
+      
+      const btnDelete = e.target.closest('.btn-delete-proceso-tema');
+      if (btnDelete) {
+        const id = btnDelete.dataset.id;
+        if (!id) return;
+        deleteProcesoTemaRelation(id);
+        return;
+      }
+    });
+    
+    // Load dropdowns for proceso-tema tab
+    await Promise.all([loadProcesosDropdown(), loadTemasDropdown()]);
+    
+    // Add proceso-tema to tab event listener
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(btn => {
+      btn.addEventListener('shown.bs.tab', (e) => {
+        const target = e.target.getAttribute('data-bs-target') || e.target.dataset.bsTarget || '';
+        if (target === '#proceso_tema') {
+          loadProcesoTemaRelations();
+          loadProcesosDropdown();
+          loadTemasDropdown();
+        }
+      });
+    });
+  });
+
   // Para depuración/exposición mínima desde consola
   window.SESIONES = {
     loadTemas, loadProcesos, loadLugares, loadTActividad,
-    addTema, addProceso, addLugar, addTActividad
+    addTema, addProceso, addLugar, addTActividad,
+    loadProcesoTemaRelations, addProcesoTemaRelation
   };
 })();
