@@ -39,9 +39,9 @@ if ($action == 'get_select') {
     // SECURITY: Whitelist of allowed tables and columns to prevent SQL injection
     $allowedTables = [
         'cap_proceso' => ['proceso'],
-        'cap_tema' => ['tema'],
+        'cap_tema' => ['nombre'],
         'cap_lugar' => ['lugar'],
-        'cap_tipo_actividad' => ['tipo_actividad'],
+        'cap_tipo_actividad' => ['nombre'],
         'adm_roles' => ['nombre'],
         'adm_empresa' => ['emp_nombre'],
         'adm_cargos' => ['cargo'],
