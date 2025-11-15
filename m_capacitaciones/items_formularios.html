@@ -191,6 +191,13 @@
                 <i class="fa-solid fa-briefcase me-1"></i> Tipo Actividad
               </button>
             </li>
+
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="proceso_tema-tab" data-bs-toggle="tab" data-bs-target="#proceso_tema" type="button"
+                role="tab" aria-controls="proceso_tema" aria-selected="false">
+                <i class="fa-solid fa-link me-1"></i> Relación Proceso Tema
+              </button>
+            </li>
           </ul>
 
           <div class="tab-content" id="sessionTabContent">
@@ -368,6 +375,63 @@
                             <tr style="background: var(--bs-primary-bg-subtle);">
                               <th style="width:80px">Id</th>
                               <th>Nombre</th>
+                              <th style="width:120px">Opciones</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <!-- Filas dinámicas -->
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PESTAÑA RELACIÓN PROCESO TEMA -->
+            <div class="tab-pane fade" id="proceso_tema" role="tabpanel" aria-labelledby="proceso_tema-tab">
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 fw-bold text-primary">Relación Proceso - Tema</h6>
+                </div>
+
+                <div class="card-body">
+                  <!-- Agregar nueva relación -->
+                  <div class="mb-3 row g-2 align-items-end">
+                    <div class="col">
+                      <label class="form-label small text-muted mb-1">Proceso</label>
+                      <select id="newRelacionProceso" class="form-select">
+                        <option value="">Seleccione proceso...</option>
+                      </select>
+                    </div>
+                    <div class="col">
+                      <label class="form-label small text-muted mb-1">Tema</label>
+                      <select id="newRelacionTema" class="form-select">
+                        <option value="">Seleccione tema...</option>
+                      </select>
+                    </div>
+                    <div class="col-auto">
+                      <button id="addProcesoTemaBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-plus me-1"></i> Agregar Relación
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Tabla de relaciones proceso-tema -->
+                  <div class="card mt-2" style="border-radius:6px;">
+                    <div class="card-header py-2" style="background: transparent; border-bottom: none;">
+                      <p class="text-primary m-0 fw-bold text-center">Lista de Relaciones (<span id="procesoTemaCount">0</span>)</p>
+                    </div>
+                    <div class="card-body p-0">
+                      <div class="table-responsive" style="max-height:400px; overflow:auto;">
+                        <table class="table table-hover mb-0" id="procesoTemaTable">
+                          <thead>
+                            <tr style="background: var(--bs-primary-bg-subtle);">
+                              <th style="width:80px">Id</th>
+                              <th>Proceso</th>
+                              <th>Tema</th>
+                              <th style="width:100px">Estado</th>
                               <th style="width:120px">Opciones</th>
                             </tr>
                           </thead>
